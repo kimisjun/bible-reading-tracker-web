@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { bibleBooks } from '../data/bibleBooks'
 import type { ReadingEvent } from './reading'
 import { calculateReadingProgress, getMonthlyActivityDates } from './progress'
@@ -50,6 +50,23 @@ describe('calculateReadingProgress', () => {
     expect(result.totalReadings).toBe(0)
   })
 
+  it('고아 취소로 장 합계가 음수여도 반복 읽기 총합은 장별 양수 합계만 센다', () => {
+    const orphanCancellation: ReadingEvent = {
+      ...read('orphan-undo', 'genesis', 1),
+      delta: -1,
+      undoneEventId: 'missing-read',
+    }
+
+    const result = calculateReadingProgress([
+      orphanCancellation,
+      { ...orphanCancellation, id: 'orphan-undo-2' },
+      read('valid-read', 'genesis', 2),
+    ])
+
+    expect(result.overall.completedChapters).toBe(1)
+    expect(result.totalReadings).toBe(1)
+  })
+
   it('구약 929장과 신약 260장의 완료 수와 진행률을 따로 계산한다', () => {
     const result = calculateReadingProgress([
       read('old-read', 'genesis', 1),
@@ -84,19 +101,55 @@ describe('calculateReadingProgress', () => {
     expect(result.oldTestament.percent).toBe(100)
     expect(result.newTestament.percent).toBe(100)
   })
+
+  it('소수 장 이벤트 여러 개가 있어도 진행률은 100%를 넘지 않는다', () => {
+    const allChapters = bibleBooks.flatMap((book) =>
+      Array.from({ length: book.chapters }, (_, index) =>
+        read(`${book.id}-${index + 1}`, book.id, index + 1),
+      ),
+    )
+    const decimalChapters = Array.from({ length: 12 }, (_, index) =>
+      read(`decimal-${index}`, 'genesis', 1 + (index + 1) / 100),
+    )
+
+    const result = calculateReadingProgress([...allChapters, ...decimalChapters])
+
+    expect(result.overall.percent).toBe(100)
+    expect(result.oldTestament.percent).toBe(100)
+    expect(result.totalReadings).toBe(1189)
+  })
 })
 
 describe('getMonthlyActivityDates', () => {
-  it('기기 시간대 변환 없이 occurredAt ISO 문자열의 YYYY-MM-DD 부분으로 월 활동일을 계산한다', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  it('주입한 날짜 키 전략으로 시간대 경계의 월 활동일을 결정한다', () => {
     const events = Object.freeze([
-      read('june', 'genesis', 1, '2026-06-30T23:30:00.000-05:00'),
-      read('july-1', 'genesis', 2, '2026-07-01T23:30:00.000-05:00'),
-      read('july-1-again', 'genesis', 3, '2026-07-01T01:00:00.000+09:00'),
-      read('july-2', 'genesis', 4, '2026-07-02T00:00:00.000Z'),
+      read('utc-july', 'genesis', 1, '2026-06-30T23:30:00.000-05:00'),
     ])
     const originalOrder = [...events]
+    const utcDateKey = (date: Date) => date.toISOString().slice(0, 10)
 
-    expect(getMonthlyActivityDates(events, '2026-07')).toEqual(['2026-07-01', '2026-07-02'])
+    expect(getMonthlyActivityDates(events, '2026-07', utcDateKey)).toEqual(['2026-07-01'])
     expect(events).toEqual(originalOrder)
+  })
+
+  it('기본 날짜 키는 occurredAt을 기기 로컬 연월일로 변환한다', () => {
+    vi.stubEnv('TZ', 'America/New_York')
+    const events = [read('local-june', 'genesis', 1, '2026-07-01T02:00:00.000Z')]
+
+    expect(getMonthlyActivityDates(events, '2026-06')).toEqual(['2026-06-30'])
+  })
+
+  it('잘못된 occurredAt은 날짜 키 전략을 호출하지 않고 무시한다', () => {
+    const events = [
+      read('invalid', 'genesis', 1, 'not-a-date'),
+      read('valid', 'genesis', 2, '2026-07-02T00:00:00.000Z'),
+    ]
+    const utcDateKey = (date: Date) => date.toISOString().slice(0, 10)
+
+    expect(getMonthlyActivityDates(events, '2026-07', utcDateKey)).toEqual(['2026-07-02'])
   })
 })

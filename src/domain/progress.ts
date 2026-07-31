@@ -11,6 +11,7 @@ export type ReadingProgress = Readonly<{
   overall: ProgressSection
   oldTestament: ProgressSection
   newTestament: ProgressSection
+  /** 장별 이벤트 합계가 양수인 읽기만 합산하며 고아 취소로 인한 음수는 0으로 취급한다. */
   totalReadings: number
 }>
 
@@ -18,7 +19,12 @@ export function calculateReadingProgress(events: readonly ReadingEvent[]): Readi
   const booksById = new Map(bibleBooks.map((book) => [book.id, book]))
   const validEvents = events.filter((event) => {
     const book = booksById.get(event.bookId)
-    return book !== undefined && event.chapter >= 1 && event.chapter <= book.chapters
+    return (
+      book !== undefined &&
+      Number.isInteger(event.chapter) &&
+      event.chapter >= 1 &&
+      event.chapter <= book.chapters
+    )
   })
   const countsByChapter = new Map<string, number>()
   for (const event of validEvents) {
@@ -53,23 +59,35 @@ export function calculateReadingProgress(events: readonly ReadingEvent[]): Readi
       totalChapters: newTotalChapters,
       percent: (newCompletedChapters / newTotalChapters) * 100,
     },
-    totalReadings: validEvents.reduce((total, event) => total + event.delta, 0),
+    totalReadings: [...countsByChapter.values()].reduce(
+      (total, count) => total + Math.max(count, 0),
+      0,
+    ),
   }
 }
 
-/**
- * 월 활동일은 기기 로컬 시간으로 변환하지 않고 `occurredAt` ISO 문자열의
- * `YYYY-MM-DD` 날짜 부분을 기준으로 집계한다.
- */
+export type ActivityDateKey = (date: Date) => string
+
+function toLocalDateKey(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+/** 월 활동일은 기본적으로 `occurredAt`을 기기 로컬 날짜로 변환해 집계한다. */
 export function getMonthlyActivityDates(
   events: readonly ReadingEvent[],
   month: string,
+  toDateKey: ActivityDateKey = toLocalDateKey,
 ): readonly string[] {
   return [
     ...new Set(
       events
         .filter((event) => event.delta > 0)
-        .map((event) => event.occurredAt.slice(0, 10))
+        .map((event) => new Date(event.occurredAt))
+        .filter((date) => !Number.isNaN(date.getTime()))
+        .map(toDateKey)
         .filter((date) => date.startsWith(`${month}-`)),
     ),
   ].sort()
