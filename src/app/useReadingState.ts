@@ -67,7 +67,7 @@ export function useReadingState(
 
     const reloadFromAnotherTab = (event: StorageEvent) => {
       if (
-        event.key === APP_STATE_STORAGE_KEY &&
+        (event.key === null || event.key === APP_STATE_STORAGE_KEY) &&
         (event.storageArea === null || event.storageArea === window.localStorage)
       ) {
         try {

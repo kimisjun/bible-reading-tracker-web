@@ -101,6 +101,44 @@ describe('usePlanState', () => {
     expect(result.current.error?.name).toBe('SecurityError')
   })
 
+  it('저장 후 검증·정규화된 객체를 UI에 반영하고 입력 변경과 격리한다', () => {
+    const storage = new MemoryStorage()
+    const { result } = renderHook(() => usePlanState(storage))
+    const input = JSON.parse(JSON.stringify(planFixture('common'))) as ReadingPlan & {
+      extraPlanField?: boolean
+      request: ReadingPlan['request'] & { name: string }
+    }
+    input.extraPlanField = true
+
+    act(() => result.current.savePlan('common', input))
+    input.request.name = '나중에 변경한 이름'
+
+    expect(result.current.commonPlan?.request.name).toBe('공통 계획')
+    expect(result.current.commonPlan).not.toHaveProperty('extraPlanField')
+  })
+
+  it('다른 탭의 storage.clear 이벤트에서 기본 상태로 동기화한다', () => {
+    window.localStorage.clear()
+    window.localStorage.setItem(APP_STATE_STORAGE_KEY, JSON.stringify({
+      schemaVersion: 1,
+      readingEvents: [],
+      commonPlan: planFixture('common'),
+      personalPlan: null,
+      settings: { theme: 'light', readerName: '', reminder: null },
+    }))
+    const { result } = renderHook(() => usePlanState())
+    expect(result.current.commonPlan).not.toBeNull()
+
+    window.localStorage.clear()
+    act(() => window.dispatchEvent(new StorageEvent('storage', {
+      key: null,
+      storageArea: window.localStorage,
+    })))
+
+    expect(result.current.commonPlan).toBeNull()
+    expect(result.current.personalPlan).toBeNull()
+  })
+
   it('기본 localStorage의 storage 이벤트에서 최신 계획을 동기화한다', () => {
     window.localStorage.clear()
     const { result } = renderHook(() => usePlanState())
@@ -131,13 +169,13 @@ function planFixture(kind: 'common' | 'personal'): ReadingPlan {
       startDate: '2026-08-01',
       endDate: '2026-08-02',
       weekdays: [0, 6],
-      range: { type: 'books', bookIds: ['genesis'] },
+      range: { type: 'books', bookIds: ['philemon', 'jude'] },
       order: 'canonical',
       missedDayPolicy: 'carry',
     },
     schedule: [
-      { date: '2026-08-01', chapters: [{ bookId: 'genesis', chapter: 1 }] },
-      { date: '2026-08-02', chapters: [{ bookId: 'genesis', chapter: 2 }] },
+      { date: '2026-08-01', chapters: [{ bookId: 'philemon', chapter: 1 }] },
+      { date: '2026-08-02', chapters: [{ bookId: 'jude', chapter: 1 }] },
     ],
     createdAt: '2026-07-31T12:00:00.000Z',
   }

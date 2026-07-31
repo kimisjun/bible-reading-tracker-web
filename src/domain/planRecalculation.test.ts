@@ -136,11 +136,10 @@ describe('recalculatePlan', () => {
 
     expect(result.schedule).toEqual([
       { date: '2024-03-04', chapters: [chapter(2), chapter(3)] },
-      { date: '2024-03-06', chapters: [chapter(5)] },
-      { date: '2024-03-11', chapters: [chapter(6)] },
+      { date: '2024-03-06', chapters: [chapter(5), chapter(6)] },
     ])
     expect(result.todayAssignment).toEqual([])
-    expect(result.lastScheduledDate).toBe('2024-03-11')
+    expect(result.lastScheduledDate).toBe('2024-03-06')
     const dailySizes = result.schedule.map((day) => day.chapters.length)
     expect(Math.max(...dailySizes) - Math.min(...dailySizes)).toBeLessThanOrEqual(1)
     expect(result.history).toEqual([
@@ -242,6 +241,40 @@ describe('recalculatePlan', () => {
       { date: '2024-02-28', chapters: [chapter(1), chapter(2)] },
       { date: '2024-02-29', chapters: [chapter(3)] },
     ])
+  })
+
+  it('carry는 오늘·미래와 미래·미래 중복 장도 한 번만 실행 가능하게 남긴다', () => {
+    const plan = createPlan([
+      { date: '2024-02-28', chapters: [chapter(1), chapter(2)] },
+      { date: '2024-02-29', chapters: [chapter(2), chapter(3)] },
+      { date: '2024-03-01', chapters: [chapter(3), chapter(4)] },
+    ])
+
+    const result = recalculatePlan({ plan, today: '2024-02-28', completedChapters: [] })
+
+    expect(result.schedule).toEqual([
+      { date: '2024-02-28', chapters: [chapter(1), chapter(2)] },
+      { date: '2024-02-29', chapters: [chapter(3)] },
+      { date: '2024-03-01', chapters: [chapter(4)] },
+    ])
+  })
+
+  it('restart-today는 기존 schedule 길이가 아니라 요청 기간의 원래 읽는 날 수를 사용한다', () => {
+    const plan = createPlan(
+      [{ date: '2024-02-26', chapters: [chapter(1), chapter(2), chapter(3), chapter(4), chapter(5), chapter(6)] }],
+      { weekdays: [1, 2, 3, 4, 5], missedDayPolicy: 'restart-today' },
+    )
+
+    const result = recalculatePlan({
+      plan,
+      today: '2024-03-04',
+      completedChapters: [],
+    })
+
+    expect(result.schedule.map((day) => day.date)).toEqual([
+      '2024-03-04', '2024-03-05', '2024-03-06', '2024-03-07', '2024-03-08',
+    ])
+    expect(result.schedule.map((day) => day.chapters.length)).toEqual([2, 1, 1, 1, 1])
   })
 
   it('carry는 계획 종료 후에도 모든 미완료를 오늘 분량으로 누적한다', () => {

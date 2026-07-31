@@ -28,6 +28,12 @@ function formatDateKey(date: CalendarDate): string {
   return `${String(date.year).padStart(4, '0')}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`
 }
 
+function isIsoTimestamp(value: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/.test(value)
+    && parseDateKey(value.slice(0, 10)) !== null
+    && !Number.isNaN(Date.parse(value))
+}
+
 function nextDay(date: CalendarDate): CalendarDate {
   if (date.day < daysInMonth(date.year, date.month)) {
     return { ...date, day: date.day + 1 }
@@ -68,9 +74,12 @@ function selectedBooks(request: PlanRequest): readonly BibleBook[] {
   return bibleBooks.filter((book) => selectedIds.has(book.id))
 }
 
-function orderedChapters(request: PlanRequest): ChapterRef[] {
+export function resolvePlanChapters(request: PlanRequest): readonly ChapterRef[] {
   const books = selectedBooks(request)
   if (request.order === 'canonical') return chaptersForBooks(books)
+  if (request.order !== 'old-new-parallel') {
+    throw new Error(`지원하지 않는 읽기 순서입니다: ${String(request.order)}`)
+  }
 
   const oldChapters = chaptersForBooks(books.filter((book) => book.testament === 'old'))
   const newChapters = chaptersForBooks(books.filter((book) => book.testament === 'new'))
@@ -95,19 +104,27 @@ function readingDates(request: PlanRequest): string[] {
 
   const selectedWeekdays = new Set<number>(request.weekdays)
   const dates: string[] = []
-  for (let current = start; formatDateKey(current) <= request.endDate; current = nextDay(current)) {
+  for (let current = start; ; current = nextDay(current)) {
     if (selectedWeekdays.has(weekdayOf(current))) dates.push(formatDateKey(current))
+    if (formatDateKey(current) === request.endDate) break
   }
   if (dates.length === 0) throw new Error('기간 안에 선택한 읽는 날이 없습니다.')
   return dates
 }
 
 export function generateReadingPlan(request: PlanRequest, createdAt: string): ReadingPlan {
+  if (!isIsoTimestamp(createdAt)) {
+    throw new Error('생성 시각은 유효한 ISO 8601 시각이어야 합니다.')
+  }
+  const range = request.range.type === 'books'
+    ? { type: 'books' as const, bookIds: [...request.range.bookIds] }
+    : { type: request.range.type }
   const normalizedRequest: PlanRequest = {
     ...request,
     weekdays: [...new Set(request.weekdays)].sort((left, right) => left - right),
+    range,
   }
-  const chapters = orderedChapters(normalizedRequest)
+  const chapters = resolvePlanChapters(normalizedRequest)
   if (chapters.length === 0) throw new Error('계획에 배치할 장이 없습니다.')
   const dates = readingDates(normalizedRequest).slice(0, chapters.length)
   const baseSize = Math.floor(chapters.length / dates.length)

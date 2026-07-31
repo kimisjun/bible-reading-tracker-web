@@ -145,7 +145,13 @@ describe('AppStateRepository', () => {
     }],
     ['책의 범위를 넘는 장', (plan: MutablePlan) => { plan.schedule[0].chapters[0].chapter = 51 }],
     ['일정 전체의 중복 장', (plan: MutablePlan) => {
-      plan.schedule[1].chapters[0] = { bookId: 'genesis', chapter: 1 }
+      plan.schedule[1].chapters[0] = { bookId: 'philemon', chapter: 1 }
+    }],
+    ['선택 범위의 장 누락', (plan: MutablePlan) => { plan.schedule.pop() }],
+    ['정경 순서 변조', (plan: MutablePlan) => {
+      const first = plan.schedule[0].chapters[0]
+      plan.schedule[0].chapters[0] = plan.schedule[1].chapters[0]
+      plan.schedule[1].chapters[0] = first
     }],
   ])('%s 계획을 거부하고 기존 bytes를 보존한다', (_label, mutate) => {
     const storage = new MemoryStorage()
@@ -396,7 +402,7 @@ describe('AppStateRepository', () => {
             occurredAt: '어제',
           },
         ],
-        commonPlan: { unsafe: true },
+        commonPlan: null,
         settings: { theme: 'prototype-dark', readerName: 'legacy' },
       }),
     )
@@ -416,6 +422,19 @@ describe('AppStateRepository', () => {
       personalPlan: null,
       settings: { theme: 'light', readerName: '', reminder: null },
     })
+  })
+
+  it('버전 없는 데이터의 임의 계획 객체를 조용히 삭제하지 않고 거부한다', () => {
+    const storage = new MemoryStorage()
+    storage.setItem(APP_STATE_STORAGE_KEY, JSON.stringify({
+      readingEvents: [],
+      commonPlan: { unsafe: true },
+    }))
+
+    expect(() => createAppStateRepository(storage).load()).toThrowError(
+      InvalidStorageDataError,
+    )
+    expect(storage.getItem(APP_STATE_STORAGE_KEY)).toContain('"unsafe":true')
   })
 
   it.each([
@@ -463,13 +482,13 @@ function validPlan(kind: 'common' | 'personal') {
       startDate: '2026-08-01',
       endDate: '2026-08-03',
       weekdays: [0, 1, 6] as const,
-      range: { type: 'books' as const, bookIds: ['genesis'] },
+      range: { type: 'books' as const, bookIds: ['philemon', 'jude'] },
       order: 'canonical' as const,
       missedDayPolicy: 'carry' as const,
     },
     schedule: [
-      { date: '2026-08-01', chapters: [{ bookId: 'genesis', chapter: 1 }] },
-      { date: '2026-08-02', chapters: [{ bookId: 'genesis', chapter: 2 }] },
+      { date: '2026-08-01', chapters: [{ bookId: 'philemon', chapter: 1 }] },
+      { date: '2026-08-02', chapters: [{ bookId: 'jude', chapter: 1 }] },
     ],
     createdAt: '2026-07-31T12:00:00.000Z',
   }

@@ -44,7 +44,7 @@ describe('generateReadingPlan', () => {
       startDate: '2026-08-01',
       endDate: '2026-08-01',
       range: { type: 'books', bookIds: ['matthew', 'ruth'] },
-    }), 'created-at')
+    }), '2026-07-31T12:00:00.000Z')
 
     expect(plan.schedule[0].chapters.slice(0, 5)).toEqual([
       { bookId: 'ruth', chapter: 1 },
@@ -61,7 +61,7 @@ describe('generateReadingPlan', () => {
       endDate: '2026-08-01',
       range: { type: 'all' },
       order: 'old-new-parallel',
-    }), 'created-at')
+    }), '2026-07-31T12:00:00.000Z')
     const chapters = plan.schedule[0].chapters
 
     expect(chapters.slice(0, 4)).toEqual([
@@ -85,7 +85,7 @@ describe('generateReadingPlan', () => {
       startDate: '2026-08-01',
       endDate: '2026-08-01',
       range,
-    }), 'created-at').schedule[0].chapters.length
+    }), '2026-07-31T12:00:00.000Z').schedule[0].chapters.length
 
     expect(chapterCount({ type: 'all' })).toBe(1189)
     expect(chapterCount({ type: 'old' })).toBe(929)
@@ -97,7 +97,7 @@ describe('generateReadingPlan', () => {
       startDate: '2026-08-01',
       endDate: '2026-08-31',
       range: { type: 'books', bookIds: ['ruth'] },
-    }), 'created-at')
+    }), '2026-07-31T12:00:00.000Z')
 
     expect(plan.schedule).toHaveLength(4)
     expect(plan.schedule.every((day) => day.chapters.length === 1)).toBe(true)
@@ -105,9 +105,46 @@ describe('generateReadingPlan', () => {
   })
 
   it('중복 요일은 제거하고 오름차순으로 정규화한다', () => {
-    const plan = generateReadingPlan(request({ weekdays: [6, 0, 6, 3] }), 'created-at')
+    const plan = generateReadingPlan(request({ weekdays: [6, 0, 6, 3] }), '2026-07-31T12:00:00.000Z')
 
     expect(plan.request.weekdays).toEqual([0, 3, 6])
+  })
+
+  it('생성 후 원본 books 배열을 변경해도 계획 범위는 바뀌지 않는다', () => {
+    const bookIds = ['ruth']
+    const plan = generateReadingPlan(
+      request({ range: { type: 'books', bookIds } }),
+      '2026-07-31T12:00:00.000Z',
+    )
+
+    bookIds.push('matthew')
+
+    expect(plan.request.range).toEqual({ type: 'books', bookIds: ['ruth'] })
+  })
+
+  it('알 수 없는 읽기 순서와 잘못된 생성 시각을 거부한다', () => {
+    expect(() => generateReadingPlan(request({
+      order: 'unknown' as PlanRequest['order'],
+    }), '2026-07-31T12:00:00.000Z')).toThrow('지원하지 않는 읽기 순서입니다: unknown')
+    expect(() => generateReadingPlan(request(), 'created-at')).toThrow(
+      '생성 시각은 유효한 ISO 8601 시각이어야 합니다.',
+    )
+    expect(() => generateReadingPlan(request(), '2026-02-30T12:00:00.000Z')).toThrow(
+      '생성 시각은 유효한 ISO 8601 시각이어야 합니다.',
+    )
+  })
+
+  it('지원 가능한 마지막 날짜 하루만 계획해도 순회를 종료한다', () => {
+    const plan = generateReadingPlan(request({
+      startDate: '9999-12-31',
+      endDate: '9999-12-31',
+      weekdays: [5],
+      range: { type: 'books', bookIds: ['obadiah'] },
+    }), '2026-07-31T12:00:00.000Z')
+
+    expect(plan.schedule).toEqual([
+      { date: '9999-12-31', chapters: [{ bookId: 'obadiah', chapter: 1 }] },
+    ])
   })
 
   it.each([
@@ -115,7 +152,7 @@ describe('generateReadingPlan', () => {
     { range: { type: 'books', bookIds: ['unknown'] } as const, message: '알 수 없는 성경 책 ID입니다: unknown' },
     { range: { type: 'books', bookIds: [] } as const, message: '계획 범위에 책이 없습니다.' },
   ])('잘못된 books 범위를 구체적으로 거부한다: $message', ({ range, message }) => {
-    expect(() => generateReadingPlan(request({ range }), 'created-at')).toThrow(message)
+    expect(() => generateReadingPlan(request({ range }), '2026-07-31T12:00:00.000Z')).toThrow(message)
   })
 
   it.each([
@@ -126,7 +163,7 @@ describe('generateReadingPlan', () => {
     { changes: { weekdays: [7] as unknown as PlanRequest['weekdays'] }, message: '요일은 0부터 6 사이여야 합니다: 7' },
     { changes: { startDate: '2026-08-03', endDate: '2026-08-03', weekdays: [2] }, message: '기간 안에 선택한 읽는 날이 없습니다.' },
   ])('잘못된 날짜·읽는 날 요청을 구체적으로 거부한다: $message', ({ changes, message }) => {
-    expect(() => generateReadingPlan(request(changes as Partial<PlanRequest>), 'created-at')).toThrow(message)
+    expect(() => generateReadingPlan(request(changes as Partial<PlanRequest>), '2026-07-31T12:00:00.000Z')).toThrow(message)
   })
 })
 
@@ -136,7 +173,7 @@ describe('createPlanPreview', () => {
       startDate: '2026-08-01',
       endDate: '2026-08-02',
       range: { type: 'new' },
-    }), 'created-at')
+    }), '2026-07-31T12:00:00.000Z')
 
     const preview = createPlanPreview(plan)
 

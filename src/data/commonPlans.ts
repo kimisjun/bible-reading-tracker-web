@@ -75,9 +75,14 @@ export function resolvePresetEndDate(startDate: string, preset: PlanPreset): str
   const parsed = parseDateKey(startDate)
   if (!parsed) throw new Error('유효한 YYYY-MM-DD 시작일이 필요합니다.')
 
-  const endDate = preset === 'ninety-days'
-    ? addDays(parsed, 89)
-    : addDays(addMonthsClamped(parsed, preset === 'one-year' ? 12 : 6), -1)
+  let endDate: CalendarDate
+  if (preset === 'ninety-days') endDate = addDays(parsed, 89)
+  else if (preset === 'one-year') endDate = addDays(addMonthsClamped(parsed, 12), -1)
+  else if (preset === 'six-month') endDate = addDays(addMonthsClamped(parsed, 6), -1)
+  else throw new Error(`지원하지 않는 계획 프리셋입니다: ${String(preset)}`)
+  if (endDate.year < 1 || endDate.year > 9999) {
+    throw new Error('프리셋 종료일이 지원하는 연도 범위를 벗어났습니다.')
+  }
   return formatDateKey(endDate)
 }
 

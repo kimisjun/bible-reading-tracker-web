@@ -44,7 +44,7 @@ export function usePlanState(storage: StorageLike = window.localStorage): PlanSt
     if (storage !== window.localStorage) return
     const reloadFromAnotherTab = (event: StorageEvent) => {
       if (
-        event.key !== APP_STATE_STORAGE_KEY ||
+        (event.key !== null && event.key !== APP_STATE_STORAGE_KEY) ||
         (event.storageArea !== null && event.storageArea !== window.localStorage)
       ) {
         return
@@ -73,11 +73,11 @@ export function usePlanState(storage: StorageLike = window.localStorage): PlanSt
       : { ...current, personalPlan: plan }
     try {
       repository.save(nextState)
+      setAppState(repository.load())
     } catch (cause) {
       setError(asError(cause))
       return
     }
-    setAppState(nextState)
     setError(null)
   }, [repository])
 

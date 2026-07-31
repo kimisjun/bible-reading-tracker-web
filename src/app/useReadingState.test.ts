@@ -163,6 +163,27 @@ describe('useReadingState', () => {
     ])
   })
 
+  it('다른 탭의 storage.clear 이벤트를 받으면 기본 읽기 상태로 동기화한다', () => {
+    window.localStorage.clear()
+    window.localStorage.setItem(APP_STATE_STORAGE_KEY, JSON.stringify({
+      schemaVersion: 1,
+      readingEvents: [eventFixture('before-clear')],
+      commonPlan: null,
+      personalPlan: null,
+      settings: { theme: 'light', readerName: '', reminder: null },
+    }))
+    const { result } = renderHook(() => useReadingState())
+    expect(result.current.events).toHaveLength(1)
+
+    window.localStorage.clear()
+    act(() => window.dispatchEvent(new StorageEvent('storage', {
+      key: null,
+      storageArea: window.localStorage,
+    })))
+
+    expect(result.current.events).toEqual([])
+  })
+
   it('기본 localStorage의 다른 탭 storage 이벤트를 받으면 최신 상태를 다시 불러온다', () => {
     window.localStorage.clear()
     const { result } = renderHook(() => useReadingState())

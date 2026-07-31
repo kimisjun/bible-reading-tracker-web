@@ -185,15 +185,17 @@ export const recalculatePlan = ({
         .flatMap((day) => day.chapters),
     ).filter((item) => !completedKeys.has(chapterKey(item)))
     todayAssignment = uniqueChapters([...pastIncomplete, ...originalToday])
-    const carriedKeys = new Set(pastIncomplete.map(chapterKey))
+    const seenActionable = new Set(todayAssignment.map(chapterKey))
     const future = plan.schedule
       .filter((day) => day.date > today)
       .map((day) => ({
         date: day.date,
-        chapters: uniqueChapters(day.chapters).filter(
-          (item) =>
-            !completedKeys.has(chapterKey(item)) && !carriedKeys.has(chapterKey(item)),
-        ),
+        chapters: uniqueChapters(day.chapters).filter((item) => {
+          const key = chapterKey(item)
+          if (completedKeys.has(key) || seenActionable.has(key)) return false
+          seenActionable.add(key)
+          return true
+        }),
       }))
       .filter((day) => day.chapters.length > 0)
     schedule = [
@@ -204,9 +206,14 @@ export const recalculatePlan = ({
     schedule = []
     todayAssignment = []
   } else {
+    const originalReadingDayCount = readingDates(
+      plan.request.startDate,
+      plan.request.endDate,
+      plan.request.weekdays,
+    ).length
     const dates =
       policy === 'restart-today'
-        ? nextReadingDates(today, plan.request.weekdays, plan.schedule.length)
+        ? nextReadingDates(today, plan.request.weekdays, originalReadingDayCount)
         : readingDates(today, plan.request.endDate, plan.request.weekdays)
     if (policy === 'redistribute' && remaining.length > 0 && dates.length === 0) {
       throw new Error(

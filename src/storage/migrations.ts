@@ -7,6 +7,7 @@ import type {
   ReadingPlan,
   Weekday,
 } from '../domain/planTypes'
+import { resolvePlanChapters } from '../domain/plans'
 import type { ReadingEvent } from '../domain/reading'
 import { bibleBooks } from '../data/bibleBooks'
 import { createDefaultAppState, type AppState } from './schema'
@@ -179,6 +180,17 @@ function toReadingPlan(value: unknown, expectedKind: PlanKind): ReadingPlan | nu
     order: request.order,
     missedDayPolicy: request.missedDayPolicy,
   }
+  const actualChapters = schedule.flatMap((day) => day.chapters)
+  const expectedChapters = resolvePlanChapters(reconstructedRequest)
+  if (
+    actualChapters.length !== expectedChapters.length ||
+    actualChapters.some((chapter, index) => {
+      const expected = expectedChapters[index]
+      return chapter.bookId !== expected.bookId || chapter.chapter !== expected.chapter
+    })
+  ) {
+    return null
+  }
   return { request: reconstructedRequest, schedule, createdAt: value.createdAt }
 }
 
@@ -248,6 +260,12 @@ function hasValidEventSequence(events: readonly ReadingEvent[]): boolean {
 }
 
 function migrateLegacyPrototype(value: UnknownRecord): AppState {
+  if (
+    ('commonPlan' in value && value.commonPlan !== null && value.commonPlan !== undefined) ||
+    ('personalPlan' in value && value.personalPlan !== null && value.personalPlan !== undefined)
+  ) {
+    throw new InvalidStorageDataError()
+  }
   const defaults = createDefaultAppState()
   const readingEvents = Array.isArray(value.readingEvents)
     ? value.readingEvents.reduce<ReadingEvent[]>((safeEvents, event) => {

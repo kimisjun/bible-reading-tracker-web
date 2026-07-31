@@ -22,6 +22,19 @@ describe('resolvePresetEndDate', () => {
   it.each(['2026-02-29', '2026-04-31', '2026-7-01', 'not-a-date'])('실재하지 않거나 형식이 틀린 날짜 %s를 거부한다', (date) => {
     expect(() => resolvePresetEndDate(date, 'one-year')).toThrow('유효한 YYYY-MM-DD 시작일이 필요합니다.')
   })
+
+  it('프리셋 결과가 4자리 연도를 넘으면 거부한다', () => {
+    expect(() => resolvePresetEndDate('9999-12-31', 'one-year')).toThrow(
+      '프리셋 종료일이 지원하는 연도 범위를 벗어났습니다.',
+    )
+  })
+
+  it('알 수 없는 프리셋을 거부한다', () => {
+    expect(() => resolvePresetEndDate(
+      '2026-01-01',
+      'unknown' as import('../domain/planTypes').PlanPreset,
+    )).toThrow('지원하지 않는 계획 프리셋입니다: unknown')
+  })
 })
 
 describe('createPresetPlanRequest', () => {
