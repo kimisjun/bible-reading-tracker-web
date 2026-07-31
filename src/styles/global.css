@@ -1,13 +1,198 @@
 :root {
-  font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
-  color: #172033;
-  background: #f5f7fb;
+  font-family: "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+  color: var(--color-text);
+  background: var(--color-background);
   font-synthesis: none;
+  text-rendering: optimizeLegibility;
+
+  --color-primary: #1d4ed8;
+  --color-primary-strong: #1e40af;
+  --color-primary-soft: #dbeafe;
+  --color-background: #f8fafc;
+  --color-surface: #ffffff;
+  --color-text: #0f172a;
+  --color-muted: #64748b;
+  --color-border: #dbe3ef;
+  --color-focus: #1d4ed8;
+  --shadow-card: 0 12px 32px rgb(15 23 42 / 8%);
+  --page-gutter: 1rem;
+  --content-width: 45rem;
 }
 
-* { box-sizing: border-box; }
-body { margin: 0; min-width: 320px; min-height: 100vh; }
-.app-shell { width: min(100% - 32px, 720px); margin: 0 auto; padding: 64px 0; }
-.eyebrow { margin: 0 0 8px; color: #2457c5; font-weight: 800; }
-h1 { margin: 0; color: #173b8f; font-size: clamp(2rem, 7vw, 3.5rem); letter-spacing: -0.05em; }
-.subtitle { color: #526078; font-size: 1.1rem; }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  background: var(--color-background);
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--color-background);
+}
+
+button {
+  font: inherit;
+}
+
+.app-shell {
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 1rem var(--page-gutter) 6.5rem;
+  overflow-wrap: anywhere;
+}
+
+.app-header,
+.app-shell > main {
+  width: min(100%, var(--content-width));
+  margin-inline: auto;
+}
+
+.app-header {
+  padding: 1rem 0 1.5rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.5rem;
+  color: var(--color-primary);
+  font-size: 0.875rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 0.625rem;
+  color: var(--color-primary-strong);
+  font-size: clamp(1.75rem, 8vw, 2.75rem);
+  line-height: 1.15;
+  letter-spacing: -0.045em;
+}
+
+.subtitle {
+  max-width: 34rem;
+  margin-bottom: 0;
+  color: var(--color-muted);
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+[role="tabpanel"] {
+  min-height: 15rem;
+  padding: clamp(1.25rem, 5vw, 2rem);
+  border: 1px solid var(--color-border);
+  border-radius: 1.25rem;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+[role="tabpanel"] h2 {
+  margin-bottom: 0.75rem;
+  color: var(--color-text);
+  font-size: clamp(1.375rem, 6vw, 1.75rem);
+  letter-spacing: -0.025em;
+}
+
+[role="tabpanel"] p {
+  max-width: 32rem;
+  margin-bottom: 0;
+  color: var(--color-muted);
+  line-height: 1.7;
+}
+
+.app-shell > nav {
+  position: fixed;
+  z-index: 10;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 0.5rem max(var(--page-gutter), env(safe-area-inset-right)) max(0.5rem, env(safe-area-inset-bottom)) max(var(--page-gutter), env(safe-area-inset-left));
+  border-top: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface) 94%, transparent);
+  box-shadow: 0 -8px 24px rgb(15 23 42 / 8%);
+  backdrop-filter: blur(12px);
+}
+
+[role="tablist"] {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  width: min(100%, var(--content-width));
+  margin-inline: auto;
+  gap: 0.25rem;
+}
+
+[role="tab"] {
+  min-width: 0;
+  min-height: 48px;
+  padding: 0.625rem 0.25rem;
+  border: 0;
+  border-radius: 0.75rem;
+  color: var(--color-muted);
+  background: transparent;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: color 160ms ease, background-color 160ms ease, transform 160ms ease;
+}
+
+[role="tab"]:active {
+  transform: scale(0.98);
+}
+
+[role="tab"][aria-selected="true"] {
+  color: var(--color-primary-strong);
+  background: var(--color-primary-soft);
+}
+
+[role="tab"]:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+@media (min-width: 48rem) {
+  :root {
+    --page-gutter: 1.5rem;
+  }
+
+  .app-shell {
+    padding-top: 2rem;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-primary: #60a5fa;
+    --color-primary-strong: #93c5fd;
+    --color-primary-soft: #172554;
+    --color-background: #0f172a;
+    --color-surface: #1e293b;
+    --color-text: #f8fafc;
+    --color-muted: #cbd5e1;
+    --color-border: #334155;
+    --color-focus: #93c5fd;
+    --shadow-card: 0 12px 32px rgb(0 0 0 / 24%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
