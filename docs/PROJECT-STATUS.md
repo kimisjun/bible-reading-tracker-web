@@ -18,11 +18,12 @@
 - [x] 모바일 우선 4탭 앱 셸
 - [x] Wave 1 통합
 
-## 진행 중 — 배포
+## 완료 — Wave 1 배포
 
-- [ ] GitHub `master` Push
-- [ ] GitHub Actions 성공 확인
-- [ ] Pages 실제 브라우저 확인
+- [x] GitHub `master` Push
+- [x] GitHub Actions 빌드·배포 성공
+- [x] Pages 실제 브라우저 4탭 전환 확인
+- [x] 브라우저 콘솔 JavaScript 오류 0
 
 ## 대기 — Wave 2
 
