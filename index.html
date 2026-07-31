@@ -1,88 +1,14 @@
 <!doctype html>
 <html lang="ko">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#2f6648">
-  <meta name="description" content="성경 66권 1,189장을 장별로 체크하고 권별 10회 완독을 기록하는 성경통독 웹앱">
-  <title>말씀과 함께 걷는 성경통독표</title>
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-  <a class="skip-link" href="#bookList">통독표로 바로가기</a>
-  <header class="app-header">
-    <div class="header-inner">
-      <div class="brand">
-        <p class="eyebrow">말씀의 씨앗을 심고 믿음의 열매를 맺는 여정</p>
-        <h1>말씀과 함께 걷는 성경통독표</h1>
-        <p class="subtitle">성경 66권 · 1,189장 · 권별 10회 완독 기록</p>
-      </div>
-      <div class="reader-box">
-        <label for="readerName">사용자 이름</label>
-        <input id="readerName" autocomplete="name" placeholder="이름을 입력하세요">
-        <span id="saveStatus" aria-live="polite">이 기기에 자동 저장됩니다</span>
-      </div>
-    </div>
-  </header>
-
-  <main class="app-shell">
-    <section class="summary" aria-labelledby="summaryTitle">
-      <div class="summary-heading">
-        <div>
-          <p class="section-kicker">나의 통독 현황</p>
-          <h2 id="summaryTitle">오늘도 말씀과 한 걸음</h2>
-        </div>
-        <button id="fontToggle" class="button secondary" type="button" aria-pressed="false">큰 글자</button>
-      </div>
-      <div class="progress-panel">
-        <div class="progress-copy">
-          <strong id="overallPercent">0%</strong>
-          <span><b id="readCount">0</b> / 1,189장 읽음</span>
-        </div>
-        <div class="progress-track" role="progressbar" aria-label="전체 성경 통독 진행률" aria-valuemin="0" aria-valuemax="1189" aria-valuenow="0">
-          <span id="progressBar"></span>
-        </div>
-      </div>
-      <div class="stat-grid">
-        <article><span>구약</span><strong id="oldStat">0 / 929장</strong></article>
-        <article><span>신약</span><strong id="newStat">0 / 260장</strong></article>
-        <article><span>완독한 성경 권</span><strong id="bookStat">0 / 66권</strong></article>
-        <article><span>완독 열매</span><strong id="fruitStat">0개</strong></article>
-      </div>
-    </section>
-
-    <section class="toolbar" aria-label="통독표 검색 및 관리">
-      <div class="search-wrap">
-        <label for="searchInput">성경 찾기</label>
-        <input id="searchInput" type="search" placeholder="예: 창세기, 요한복음">
-      </div>
-      <div class="filter-tabs" role="group" aria-label="성경 구분">
-        <button class="tab active" data-filter="all" type="button" aria-pressed="true">전체 66권</button>
-        <button class="tab" data-filter="old" type="button" aria-pressed="false">구약 39권</button>
-        <button class="tab" data-filter="new" type="button" aria-pressed="false">신약 27권</button>
-        <button class="tab" data-filter="unfinished" type="button" aria-pressed="false">읽는 중</button>
-      </div>
-      <div class="data-actions">
-        <button id="exportButton" class="button secondary" type="button">백업 저장</button>
-        <label class="button secondary file-button">백업 불러오기<input id="importInput" type="file" accept="application/json"></label>
-        <button id="printButton" class="button secondary" type="button">인쇄</button>
-        <button id="resetButton" class="button danger" type="button">기록 초기화</button>
-      </div>
-    </section>
-
-    <section class="legend" aria-label="사용 방법">
-      <span><i class="legend-chapter">1</i> 읽은 장 번호를 누르세요</span>
-      <span><i class="legend-fruit">1</i> 한 권을 마치면 열매를 누르세요</span>
-      <span>기록은 현재 휴대폰이나 컴퓨터에 자동 저장됩니다</span>
-    </section>
-
-    <section id="bookList" class="book-list" aria-label="성경 66권 통독표"></section>
-    <p id="emptyState" class="empty-state" hidden>검색 조건에 맞는 성경이 없습니다.</p>
-  </main>
-
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <noscript>이 통독표는 JavaScript를 켜야 사용할 수 있습니다.</noscript>
-  <script src="app.js" defer></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#173b8f" />
+    <meta name="description" content="성경 66권 1,189장을 기록하는 개인 오프라인 성경통독 앱" />
+    <title>말씀과 함께 걷기</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
