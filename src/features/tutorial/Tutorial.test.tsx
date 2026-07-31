@@ -35,4 +35,25 @@ describe('Tutorial', () => {
 
     expect(onComplete).toHaveBeenCalledOnce()
   })
+
+  it('키보드 포커스를 대화상자 안에 유지하고 Escape로 닫는다', async () => {
+    const user = userEvent.setup()
+    const onComplete = vi.fn()
+    render(<Tutorial onComplete={onComplete} />)
+
+    const dialog = screen.getByRole('dialog', { name: '처음 사용 안내' })
+    const skip = screen.getByRole('button', { name: '튜토리얼 건너뛰기' })
+    const next = screen.getByRole('button', { name: '다음' })
+    expect(dialog).toHaveFocus()
+
+    await user.tab()
+    expect(skip).toHaveFocus()
+    await user.tab({ shift: true })
+    expect(next).toHaveFocus()
+    await user.tab()
+    expect(skip).toHaveFocus()
+
+    await user.keyboard('{Escape}')
+    expect(onComplete).toHaveBeenCalledOnce()
+  })
 })
