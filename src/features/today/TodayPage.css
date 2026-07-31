@@ -1,0 +1,114 @@
+.today-page {
+  --today-background: #f8fafc;
+  --today-surface: #ffffff;
+  --today-text: #0f172a;
+  --today-muted: #64748b;
+  --today-primary: #1d4ed8;
+  --today-primary-strong: #1e40af;
+  --today-border: #cbd5e1;
+
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 34rem;
+  margin-inline: auto;
+  padding: 1rem;
+  color: var(--today-text);
+  background: var(--today-background);
+}
+
+.today-page__title {
+  margin: 0 0 0.75rem;
+  font-size: 1.25rem;
+}
+
+.today-page__card {
+  padding: 1.25rem;
+  border: 1px solid var(--today-border);
+  border-radius: 1rem;
+  background: var(--today-surface);
+  box-shadow: 0 0.5rem 1.5rem rgb(15 23 42 / 8%);
+}
+
+.today-page__eyebrow,
+.today-page__description {
+  margin: 0;
+  color: var(--today-muted);
+}
+
+.today-page__recommendation {
+  margin: 0.5rem 0 0.25rem;
+  font-size: clamp(1.5rem, 7vw, 2rem);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.today-page__actions {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.today-page__button {
+  min-height: 44px;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--today-primary);
+  border-radius: 0.75rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.today-page__button--primary {
+  color: #ffffff;
+  background: var(--today-primary);
+}
+
+.today-page__button--primary:hover {
+  background: var(--today-primary-strong);
+}
+
+.today-page__button--secondary {
+  color: var(--today-primary-strong);
+  background: transparent;
+}
+
+.today-page__button:focus-visible {
+  outline: 3px solid var(--today-text);
+  outline-offset: 3px;
+}
+
+[data-theme='dark'] .today-page {
+  --today-background: #0f172a;
+  --today-surface: #1e293b;
+  --today-text: #f8fafc;
+  --today-muted: #cbd5e1;
+  --today-primary: #60a5fa;
+  --today-primary-strong: #93c5fd;
+  --today-border: #475569;
+}
+
+@media (prefers-color-scheme: dark) {
+  .today-page {
+    --today-background: #0f172a;
+    --today-surface: #1e293b;
+    --today-text: #f8fafc;
+    --today-muted: #cbd5e1;
+    --today-primary: #60a5fa;
+    --today-primary-strong: #93c5fd;
+    --today-border: #475569;
+  }
+
+  .today-page__button--primary {
+    color: #0f172a;
+  }
+
+  .today-page__button--secondary {
+    color: var(--today-primary-strong);
+  }
+}
+
+@media (min-width: 30rem) {
+  .today-page__actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
