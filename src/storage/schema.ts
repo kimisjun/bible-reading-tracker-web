@@ -1,6 +1,5 @@
+import type { ReadingPlan } from '../domain/planTypes'
 import type { ReadingEvent } from '../domain/reading'
-
-export type PlanState = Readonly<Record<string, unknown>>
 
 export type AppSettings = Readonly<{
   theme: 'light' | 'dark'
@@ -11,8 +10,8 @@ export type AppSettings = Readonly<{
 export type AppState = Readonly<{
   schemaVersion: 1
   readingEvents: readonly ReadingEvent[]
-  commonPlan: PlanState | null
-  personalPlan: PlanState | null
+  commonPlan: ReadingPlan | null
+  personalPlan: ReadingPlan | null
   settings: AppSettings
 }>
 
