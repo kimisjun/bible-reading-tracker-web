@@ -1,0 +1,199 @@
+.today-plan {
+  --plan-primary: #1d4ed8;
+  --plan-primary-strong: #1e40af;
+  --plan-surface: #ffffff;
+  --plan-surface-soft: #eff6ff;
+  --plan-text: #0f172a;
+  --plan-muted: #64748b;
+  --plan-border: #cbd5e1;
+  --plan-success: #15803d;
+  min-width: 0;
+  color: var(--plan-text);
+}
+
+.today-plan__title {
+  margin: 0 0 0.75rem;
+  font-size: 1.25rem;
+}
+
+.today-plan__cards {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.today-plan__card {
+  min-width: 0;
+  padding: 1rem;
+  overflow-wrap: anywhere;
+  background: var(--plan-surface);
+  border: 1px solid var(--plan-border);
+  border-radius: 1rem;
+  box-shadow: 0 0.25rem 1rem rgb(15 23 42 / 8%);
+}
+
+.today-plan__header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.25rem 0.75rem;
+  align-items: center;
+}
+
+.today-plan__kind {
+  grid-column: 1 / -1;
+  width: fit-content;
+  margin: 0;
+  padding: 0.2rem 0.55rem;
+  color: var(--plan-primary-strong);
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: var(--plan-surface-soft);
+  border-radius: 999px;
+}
+
+.today-plan__name {
+  min-width: 0;
+  margin: 0.25rem 0 0;
+  font-size: 1.1rem;
+}
+
+.today-plan__date {
+  color: var(--plan-muted);
+  font-size: 0.875rem;
+}
+
+.today-plan__chapters {
+  display: grid;
+  gap: 0.5rem;
+  margin: 1rem 0;
+  padding: 0;
+  list-style: none;
+}
+
+.today-plan__chapter {
+  display: flex;
+  min-width: 0;
+  min-height: 44px;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.25rem 0 0.25rem 0.75rem;
+  background: var(--plan-surface-soft);
+  border-radius: 0.75rem;
+}
+
+.today-plan__completed {
+  color: var(--plan-success);
+  font-weight: 700;
+}
+
+.today-plan__button {
+  min-height: 44px;
+  padding: 0.625rem 0.875rem;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 700;
+  background: var(--plan-primary);
+  border: 0;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: background-color 160ms ease, transform 160ms ease;
+}
+
+.today-plan__button:hover:not(:disabled) {
+  background: var(--plan-primary-strong);
+}
+
+.today-plan__button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.today-plan__button:focus-visible {
+  outline: 3px solid var(--plan-primary-strong);
+  outline-offset: 2px;
+}
+
+.today-plan__button:disabled {
+  color: var(--plan-muted);
+  background: var(--plan-border);
+  cursor: not-allowed;
+}
+
+.today-plan__button--read {
+  flex: 0 0 auto;
+}
+
+.today-plan__button--complete,
+.today-plan__button--undo {
+  width: 100%;
+}
+
+.today-plan__button--undo {
+  margin-top: 0.5rem;
+  color: var(--plan-primary-strong);
+  background: transparent;
+  border: 1px solid var(--plan-primary);
+}
+
+.today-plan__status {
+  margin: 0 0 0.75rem;
+  color: var(--plan-muted);
+  font-size: 0.9rem;
+}
+
+.today-plan__status p {
+  margin: 0.25rem 0;
+}
+
+.today-plan__celebration {
+  color: var(--plan-success);
+  font-weight: 700;
+}
+
+@media (min-width: 40rem) {
+  .today-plan__cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 320px) {
+  .today-plan__card {
+    padding: 0.75rem;
+  }
+
+  .today-plan__header {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .today-plan__chapter {
+    flex-wrap: wrap;
+    padding: 0.5rem;
+  }
+
+  .today-plan__button--read {
+    width: 100%;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .today-plan {
+    --plan-primary: #60a5fa;
+    --plan-primary-strong: #93c5fd;
+    --plan-surface: #1e293b;
+    --plan-surface-soft: #0f172a;
+    --plan-text: #f8fafc;
+    --plan-muted: #cbd5e1;
+    --plan-border: #475569;
+    --plan-success: #4ade80;
+  }
+
+  .today-plan__button:not(.today-plan__button--undo) {
+    color: #0f172a;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .today-plan__button {
+    transition: none;
+  }
+}
