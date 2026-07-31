@@ -22,13 +22,15 @@
 - `docs/PLAN-CONTRACT.md`
 - `src/domain/planTypes.ts`
 
-## Wave 3A — 병렬 개발
+## Wave 3A — 병렬 개발 완료
 
 | 작업 | 브랜치 | 소유 범위 | 상태 |
 |---|---|---|---|
-| 계획 생성 엔진 | `agent/wave3-plan-engine` | `src/domain/plans*`, `src/data/commonPlans*` | 준비 중 |
-| 놓친 일정 정책 | `agent/wave3-plan-recalculation` | `src/domain/planRecalculation*` | 준비 중 |
-| 계획 저장 계층 | `agent/wave3-plan-storage` | `src/storage/planValidation*`, `src/app/usePlanState*` | 준비 중 |
+| 계획 생성 엔진 | `agent/wave3-plan-engine` | `src/domain/plans*`, `src/data/commonPlans*` | 통합·검증 완료 |
+| 놓친 일정 정책 | `agent/wave3-plan-recalculation` | `src/domain/planRecalculation*` | 통합·검증 완료 |
+| 계획 저장 계층 | `agent/wave3-plan-storage` | `src/storage/**`, `src/app/usePlanState*` | 통합·검증 완료 |
+
+검증: 테스트 20개 파일·188개, lint·build·audit 통과.
 
 ## Wave 3B — 다음 병렬 개발
 
