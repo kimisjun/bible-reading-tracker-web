@@ -24,13 +24,11 @@
 }
 
 html {
-  min-width: 320px;
   background: var(--color-background);
 }
 
 body {
   margin: 0;
-  min-width: 320px;
   min-height: 100vh;
   min-height: 100dvh;
   background: var(--color-background);
@@ -111,6 +109,35 @@ h1 {
   line-height: 1.7;
 }
 
+.empty-state-action {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.empty-state-action strong {
+  color: var(--color-text);
+  font-size: 1.125rem;
+}
+
+.empty-state-action button {
+  min-height: 44px;
+  padding: 0.625rem 1rem;
+  border: 0;
+  border-radius: 0.75rem;
+  color: #ffffff;
+  background: var(--color-primary-strong);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.empty-state-action button:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
 .app-shell > nav {
   position: fixed;
   z-index: 10;
@@ -133,6 +160,11 @@ h1 {
 }
 
 [role="tab"] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
   min-width: 0;
   min-height: 48px;
   padding: 0.625rem 0.25rem;
@@ -145,6 +177,16 @@ h1 {
   line-height: 1.2;
   cursor: pointer;
   transition: color 160ms ease, background-color 160ms ease, transform 160ms ease;
+}
+
+[role="tab"] svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 [role="tab"]:active {
