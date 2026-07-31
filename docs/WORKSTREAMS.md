@@ -1,23 +1,23 @@
 # 병렬 작업 현황
 
-## Wave 1 — 진행 중
+## Wave 1 — 통합 완료
 
 | 작업 | 브랜치 | worktree | 소유 범위 | 상태 |
 |---|---|---|---|---|
-| 버전형 저장소 | `agent/storage` | `../bible-reading-tracker-worktrees/storage` | `src/storage/**` | 에이전트 작업 중 |
-| 진행률 계산 | `agent/progress` | `../bible-reading-tracker-worktrees/progress` | `src/domain/progress*` | 에이전트 작업 중 |
-| 4탭 UI 셸 | `agent/ui-shell` | `../bible-reading-tracker-worktrees/ui-shell` | `src/components/**`, `src/pages/**`, `src/app/App*`, `src/styles/**` | 에이전트 작업 중 |
+| 버전형 저장소 | `agent/storage` | `../bible-reading-tracker-worktrees/storage` | `src/storage/**` | `master` 통합 완료 |
+| 진행률 계산 | `agent/progress` | `../bible-reading-tracker-worktrees/progress` | `src/domain/progress*` | `master` 통합 완료 |
+| 4탭 UI 셸 | `agent/ui-shell` | `../bible-reading-tracker-worktrees/ui-shell` | `src/components/**`, `src/pages/**`, `src/app/App*`, `src/styles/**` | `master` 통합 완료 |
 
 ## 통합 대기열
 
 각 작업은 다음 조건을 충족해야 통합한다.
 
-- [ ] 지정 브랜치에 커밋 존재
-- [ ] 작업 범위 준수
-- [ ] 테스트 우선 RED 증거
-- [ ] 집중 테스트 통과
-- [ ] 전체 테스트·린트·빌드 통과
-- [ ] 통합자 diff 검토
+- [x] 지정 브랜치에 커밋 존재
+- [x] 작업 범위 준수
+- [x] 테스트 우선 RED 증거
+- [x] 집중 테스트 통과
+- [x] 전체 테스트·린트·빌드 통과
+- [x] 통합자 diff 검토
 
 ## Wave 1 완료 후 즉시 수행
 
