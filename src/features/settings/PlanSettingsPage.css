@@ -1,0 +1,90 @@
+.plan-settings {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.plan-settings__card {
+  min-width: 0;
+  padding: clamp(1rem, 4vw, 1.5rem);
+  border: 1px solid var(--border-color, #dbe4f0);
+  border-radius: 1rem;
+  background: var(--surface-color, #fff);
+  color: var(--text-color, #0f172a);
+}
+
+.plan-settings__card h2,
+.plan-settings__card h4,
+.plan-settings__card p { margin-top: 0; }
+.plan-settings__card form { display: grid; gap: 0.75rem; }
+.plan-settings__card label,
+.plan-settings__fieldset legend { font-weight: 750; }
+.plan-settings__card input,
+.plan-settings__card select,
+.plan-settings__card button {
+  min-height: 44px;
+  max-width: 100%;
+  border-radius: 0.65rem;
+  font: inherit;
+}
+.plan-settings__card input,
+.plan-settings__card select { padding: 0.55rem 0.7rem; border: 1px solid var(--border-color, #94a3b8); background: var(--surface-color, #fff); color: inherit; }
+.plan-settings__fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.plan-settings__date-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.65rem; }
+.plan-settings__date-grid label { display: grid; gap: 0.4rem; min-width: 0; }
+.plan-settings__books { margin-top: 0.25rem; }
+.plan-settings__book-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr)); gap: 0.35rem; max-height: 19rem; margin-top: 0.45rem; padding: 0.35rem; overflow-y: auto; border: 1px solid var(--border-color, #94a3b8); border-radius: 0.7rem; }
+.plan-settings__book-grid label { display: flex; align-items: center; gap: 0.45rem; min-width: 0; min-height: 44px; padding: 0.25rem; border-radius: 0.45rem; cursor: pointer; }
+.plan-settings__book-grid input { flex: 0 0 auto; width: 1.25rem; min-height: 1.25rem; margin: 0; }
+.plan-settings__book-grid span { min-width: 0; overflow-wrap: anywhere; }
+.plan-settings__book-grid small { display: block; color: var(--muted-color, #475569); }
+.plan-settings__weekdays { display: grid; grid-template-columns: repeat(auto-fit, minmax(44px, 1fr)); gap: 0.3rem; margin-top: 0.45rem; }
+.plan-settings__weekdays button { min-width: 44px; padding: 0; border: 1px solid var(--border-color, #94a3b8); background: transparent; color: inherit; }
+.plan-settings__weekdays button[aria-pressed="true"] { border-color: var(--primary-color, #1d4ed8); background: var(--primary-color, #1d4ed8); color: #fff; }
+.plan-settings__current { margin-bottom: 1rem; padding: 0.9rem; border-radius: 0.75rem; background: var(--soft-color, #eff6ff); }
+.plan-settings__current p:last-of-type { margin-bottom: 0.75rem; color: var(--muted-color, #475569); overflow-wrap: anywhere; }
+.plan-settings__empty { color: var(--muted-color, #475569); }
+.plan-settings__primary,
+.plan-settings__danger { padding: 0.6rem 1rem; font-weight: 800; cursor: pointer; }
+.plan-settings__primary { border: 1px solid var(--primary-color, #1d4ed8); background: var(--primary-color, #1d4ed8); color: #fff; }
+.plan-settings__primary:disabled { cursor: not-allowed; opacity: 0.55; }
+.plan-settings__danger { border: 1px solid var(--danger-color, #b91c1c); background: transparent; color: var(--danger-color, #b91c1c); }
+.plan-settings__preview { min-width: 0; margin-top: 0.5rem; padding: 1rem; border-radius: 0.8rem; background: var(--soft-color, #eff6ff); }
+.plan-settings__metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
+.plan-settings__metrics span { overflow-wrap: anywhere; font-weight: 700; }
+.plan-settings__days { margin: 0.9rem 0 0; padding-left: 1.4rem; }
+.plan-settings__days li { margin-top: 0.45rem; }
+.plan-settings__days time { display: block; font-weight: 700; }
+.plan-settings__days span { display: block; color: var(--muted-color, #475569); overflow-wrap: anywhere; }
+.plan-settings__warning { margin: 0.8rem 0 0; color: var(--warning-color, #92400e); font-weight: 750; }
+.plan-settings__alert { padding: 0.8rem; border-left: 4px solid var(--danger-color, #b91c1c); color: var(--danger-color, #b91c1c); font-weight: 750; }
+.plan-settings__card :focus-visible { outline: 3px solid var(--focus-color, #f59e0b); outline-offset: 2px; }
+
+@media (max-width: 360px) {
+  .plan-settings__card { padding: 0.85rem; }
+  .plan-settings__date-grid,
+  .plan-settings__metrics { grid-template-columns: 1fr; }
+  .plan-settings__book-grid { grid-template-columns: 1fr; }
+  .plan-settings__weekdays { gap: 0.15rem; }
+}
+
+@media (prefers-color-scheme: dark) {
+  .plan-settings__card {
+    --surface-color: #1e293b;
+    --text-color: #f8fafc;
+    --muted-color: #cbd5e1;
+    --border-color: #64748b;
+    --primary-color: #60a5fa;
+    --soft-color: #0f172a;
+    --danger-color: #fca5a5;
+    --warning-color: #fcd34d;
+  }
+  .plan-settings__primary { color: #0f172a; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plan-settings__card *,
+  .plan-settings__card *::before,
+  .plan-settings__card *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
+}
