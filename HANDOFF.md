@@ -48,8 +48,8 @@ npm audit
 
 최근 기준:
 
-- 테스트 파일 14개
-- 테스트 100개 통과
+- 테스트 파일 15개
+- 테스트 101개 통과
 - ESLint 통과
 - TypeScript/Vite 빌드 성공
 - npm audit 취약점 0건

@@ -10,7 +10,7 @@ describe('Tutorial', () => {
 
     expect(screen.getByRole('dialog', { name: '처음 사용 안내' })).toBeInTheDocument()
     expect(screen.getByText('1 / 3')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: '기록은 이 기기에 안전하게 저장돼요' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '읽기 기록은 이 브라우저에만 저장돼요' })).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: '다음' }))
     expect(screen.getByRole('heading', { name: '오늘 읽을 말씀부터 시작하세요' })).toBeInTheDocument()
@@ -46,6 +46,8 @@ describe('Tutorial', () => {
     const next = screen.getByRole('button', { name: '다음' })
     expect(dialog).toHaveFocus()
 
+    await user.tab({ shift: true })
+    expect(next).toHaveFocus()
     await user.tab()
     expect(skip).toHaveFocus()
     await user.tab({ shift: true })

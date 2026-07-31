@@ -4,7 +4,7 @@ import './Tutorial.css'
 const steps = [
   {
     icon: '🔒',
-    title: '기록은 이 기기에 안전하게 저장돼요',
+    title: '읽기 기록은 이 브라우저에만 저장돼요',
     description: '로그인 없이 사용할 수 있고, 읽기 기록은 현재 브라우저에 저장됩니다.',
   },
   {
@@ -26,11 +26,18 @@ export type TutorialProps = Readonly<{
 export function Tutorial({ onComplete }: TutorialProps) {
   const [stepIndex, setStepIndex] = useState(0)
   const dialogRef = useRef<HTMLDivElement>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
   const step = steps[stepIndex]
   const isLastStep = stepIndex === steps.length - 1
 
   useEffect(() => {
+    previousFocusRef.current = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null
     dialogRef.current?.focus()
+    return () => {
+      if (previousFocusRef.current?.isConnected) previousFocusRef.current.focus()
+    }
   }, [])
 
   useEffect(() => {
@@ -43,7 +50,13 @@ export function Tutorial({ onComplete }: TutorialProps) {
       )
       const first = focusable[0]
       const last = focusable.at(-1)
-      if (event.shiftKey && document.activeElement === first) {
+      const activeElement = document.activeElement
+      const focusIsOutside = !dialogRef.current.contains(activeElement)
+      if (focusIsOutside || activeElement === dialogRef.current) {
+        event.preventDefault()
+        if (event.shiftKey) last?.focus()
+        else first?.focus()
+      } else if (event.shiftKey && activeElement === first) {
         event.preventDefault()
         last?.focus()
       } else if (!event.shiftKey && document.activeElement === last) {
@@ -67,7 +80,7 @@ export function Tutorial({ onComplete }: TutorialProps) {
         tabIndex={-1}
       >
         <div className="tutorial-topline">
-          <span aria-live="polite">{stepIndex + 1} / {steps.length}</span>
+          <span>{stepIndex + 1} / {steps.length}</span>
           <button
             aria-label="튜토리얼 건너뛰기"
             className="tutorial-skip"

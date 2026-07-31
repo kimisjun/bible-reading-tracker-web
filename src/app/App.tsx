@@ -68,21 +68,21 @@ export function App() {
 
   return (
     <div className="app-shell">
-      <header className="app-header">
+      <header className="app-header" inert={showTutorial || undefined}>
         <p className="eyebrow">개인 오프라인판</p>
         <h1>말씀과 함께 걷기</h1>
         <p className="subtitle">성경 66권 1,189장을 차근차근 기록해 보세요.</p>
       </header>
 
       {reading.error && (
-        <div role="alert" className="storage-error">
+        <div role="alert" className="storage-error" inert={showTutorial || undefined}>
           <strong>저장 데이터를 불러오거나 저장하지 못했습니다.</strong>
           <p>백업을 복원하거나 브라우저 저장소 설정을 확인해 주세요.</p>
           <small>{reading.error.message}</small>
         </div>
       )}
 
-      <main>
+      <main inert={showTutorial || undefined}>
         {pageEntries.map(([pageId]) => (
           <section
             aria-labelledby={`${pageId}-tab`}
@@ -121,7 +121,7 @@ export function App() {
         ))}
       </main>
 
-      <nav aria-label="주요 메뉴">
+      <nav aria-label="주요 메뉴" inert={showTutorial || undefined}>
         <div role="tablist" aria-label="앱 화면">
           {pageEntries.map(
             ([pageId, item], index) => (
