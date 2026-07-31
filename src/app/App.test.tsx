@@ -3,6 +3,10 @@ import userEvent from '@testing-library/user-event'
 import { App } from './App'
 
 describe('App', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
+
   it('앱 이름과 개인 오프라인판 안내를 보여준다', () => {
     render(<App />)
 
@@ -18,7 +22,7 @@ describe('App', () => {
     expect(tabs).toHaveLength(4)
     expect(screen.getByRole('tab', { name: '오늘' })).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByRole('heading', { name: '오늘 읽기' })).toBeInTheDocument()
-    expect(screen.getByText('아직 읽기 기록이 없어요. 첫 장부터 함께 시작해 보세요.')).toBeInTheDocument()
+    expect(screen.getByText('창세기 1장')).toBeInTheDocument()
   })
 
   it('각 탭에 보조 기술에서 숨긴 아이콘과 이름을 함께 표시한다', () => {
@@ -82,8 +86,8 @@ describe('App', () => {
     render(<App />)
 
     const destinations = [
-      ['통독표', '나의 통독표', '읽은 장이 아직 없어요. 통독을 시작하면 장별 기록이 여기에 나타나요.'],
-      ['진행', '나의 진행', '첫 읽기를 기록하면 전체 진행률과 읽은 날을 확인할 수 있어요.'],
+      ['통독표', '나의 통독표', '책 이름 검색'],
+      ['진행', '나의 진행', '최근 읽기 기록이 없어요.'],
       ['설정', '설정', '통독 계획과 화면, 데이터 설정을 여기에서 관리할 수 있어요.'],
     ] as const
 
