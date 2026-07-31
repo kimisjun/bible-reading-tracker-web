@@ -1,16 +1,10 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { bibleBooks } from '../../data/bibleBooks'
-import { getReadingCount, type ReadingEvent } from '../../domain/reading'
+import type { ReadingEvent } from '../../domain/reading'
 import './TrackerPage.css'
 
 type BookFilter = 'all' | 'old' | 'new' | 'reading'
 const touchTargetStyle = { minHeight: '44px' } as const
-
-function getBookCounts(events: readonly ReadingEvent[], bookId: string, chapters: number) {
-  return Array.from({ length: chapters }, (_, index) =>
-    Math.max(0, getReadingCount(events, bookId, index + 1)),
-  )
-}
 
 export type TrackerPageProps = Readonly<{
   events: readonly ReadingEvent[]
@@ -25,12 +19,35 @@ export function TrackerPage({ events, onChange }: TrackerPageProps) {
     Readonly<{ bookId: string; chapter: number }> | undefined
   >()
 
+  const countsByBook = useMemo(() => {
+    const index = new Map(
+      bibleBooks.map((book) => [book.id, Array<number>(book.chapters).fill(0)]),
+    )
+
+    for (const event of events) {
+      const counts = index.get(event.bookId)
+      if (counts && event.chapter >= 1 && event.chapter <= counts.length) {
+        counts[event.chapter - 1] += event.delta
+      }
+    }
+
+    for (const counts of index.values()) {
+      for (let chapterIndex = 0; chapterIndex < counts.length; chapterIndex += 1) {
+        counts[chapterIndex] = Math.max(0, counts[chapterIndex])
+      }
+    }
+
+    return index
+  }, [events])
+
   const visibleBooks = bibleBooks.filter((book) => {
-    const matchesQuery = book.name.includes(query.trim())
+    const normalizedQuery = query.trim()
+    const matchesQuery =
+      book.name.includes(normalizedQuery) || book.shortName.includes(normalizedQuery)
     if (!matchesQuery) return false
     if (filter === 'old' || filter === 'new') return book.testament === filter
     if (filter === 'reading') {
-      return getBookCounts(events, book.id, book.chapters).some((count) => count > 0)
+      return countsByBook.get(book.id)!.some((count) => count > 0)
     }
     return true
   })
@@ -78,7 +95,7 @@ export function TrackerPage({ events, onChange }: TrackerPageProps) {
       <div className="tracker__books">
         {visibleBooks.map((book) => {
           const expanded = expandedBookIds.has(book.id)
-          const counts = getBookCounts(events, book.id, book.chapters)
+          const counts = countsByBook.get(book.id)!
           const completed = counts.filter((count) => count > 0).length
           const panelId = `tracker-book-${book.id}`
 
@@ -88,7 +105,7 @@ export function TrackerPage({ events, onChange }: TrackerPageProps) {
                 type="button"
                 style={touchTargetStyle}
                 aria-expanded={expanded}
-                aria-controls={panelId}
+                aria-controls={expanded ? panelId : undefined}
                 aria-label={`${book.name}, ${completed}/${book.chapters}장, ${expanded ? '접기' : '펼치기'}`}
                 className="tracker__book-toggle"
                 onClick={() => toggleBook(book.id)}
@@ -126,9 +143,12 @@ export function TrackerPage({ events, onChange }: TrackerPageProps) {
                     <div
                       className="tracker__detail"
                       role="region"
-                      aria-label={`${book.name} ${selectedChapter.chapter}장 상세`}
+                      aria-labelledby={`tracker-detail-${book.id}-${selectedChapter.chapter}-title`}
+                      aria-live="polite"
                     >
-                      <h3>{book.name} {selectedChapter.chapter}장</h3>
+                      <h3 id={`tracker-detail-${book.id}-${selectedChapter.chapter}-title`}>
+                        {book.name} {selectedChapter.chapter}장
+                      </h3>
                       <p>현재 {counts[selectedChapter.chapter - 1]}회 읽음</p>
                       <button
                         type="button"

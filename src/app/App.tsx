@@ -87,7 +87,7 @@ export function App() {
                 onOpenTracker={() => selectTab(1)}
               />
             )}
-            {pageId === 'table' && (
+            {pageId === 'table' && activePage === 'table' && (
               <TrackerPage events={reading.events} onChange={reading.change} />
             )}
             {pageId === 'progress' && (

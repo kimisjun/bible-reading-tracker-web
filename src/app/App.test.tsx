@@ -91,6 +91,19 @@ describe('App', () => {
     expect(settingsTab).toHaveFocus()
   })
 
+  it('비활성 탭의 무거운 통독표를 마운트하지 않는다', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    expect(document.querySelector('.tracker')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('tab', { name: '통독표' }))
+    expect(document.querySelector('.tracker')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('tab', { name: '오늘' }))
+    expect(document.querySelector('.tracker')).not.toBeInTheDocument()
+  })
+
   it('하단 탭을 누르면 선택 상태와 빈 상태 안내를 함께 바꾼다', async () => {
     const user = userEvent.setup()
     render(<App />)

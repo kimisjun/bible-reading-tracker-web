@@ -25,6 +25,7 @@ describe('TrackerPage', () => {
     const bookButtons = screen.getAllByRole('button', { name: /장, (펼치기|접기)$/ })
     expect(bookButtons).toHaveLength(66)
     expect(bookButtons[0]).toHaveAccessibleName('창세기, 0/50장, 펼치기')
+    expect(bookButtons[0]).not.toHaveAttribute('aria-controls')
     expect(bookButtons[65]).toHaveAccessibleName('요한계시록, 0/22장, 펼치기')
     expect(screen.queryByRole('button', { name: '창세기 1장, 읽지 않음' })).not.toBeInTheDocument()
 
@@ -36,6 +37,9 @@ describe('TrackerPage', () => {
       'aria-expanded',
       'true',
     )
+    const expandedToggle = screen.getByRole('button', { name: '창세기, 0/50장, 접기' })
+    expect(expandedToggle).toHaveAttribute('aria-controls', genesis.id)
+    expect(document.getElementById(expandedToggle.getAttribute('aria-controls')!)).toBe(genesis)
   })
 
   it('정식 한국어 책 이름을 검색하고 일치하는 책이 없으면 빈 상태를 보여준다', async () => {
@@ -53,6 +57,41 @@ describe('TrackerPage', () => {
 
     expect(screen.getByText('검색과 필터에 맞는 성경책이 없어요.')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /장, 펼치기$/ })).not.toBeInTheDocument()
+  })
+
+  it.each([
+    ['창', '창세기, 0/50장, 펼치기'],
+    ['삼상', '사무엘상, 0/31장, 펼치기'],
+    ['고전', '고린도전서, 0/16장, 펼치기'],
+    ['계', '요한계시록, 0/22장, 펼치기'],
+  ])('약칭 %s로 성경책을 검색한다', async (shortName, accessibleName) => {
+    const user = userEvent.setup()
+    render(<TrackerPage events={[]} onChange={vi.fn()} />)
+
+    await user.type(screen.getByRole('searchbox', { name: '책 이름 검색' }), shortName)
+
+    expect(screen.getAllByRole('button', { name: /장, 펼치기$/ })).toHaveLength(1)
+    expect(screen.getByRole('button', { name: accessibleName })).toBeInTheDocument()
+  })
+
+  it('대량 이벤트를 한 번만 순회해 유효한 장별 횟수 인덱스를 재사용한다', () => {
+    let bookIdReads = 0
+    const events = Array.from({ length: 200 }, (_, index): ReadingEvent => ({
+      id: `bulk-${index}`,
+      get bookId() {
+        bookIdReads += 1
+        return index % 2 === 0 ? 'genesis' : 'matthew'
+      },
+      chapter: 1,
+      delta: 1,
+      occurredAt: '2026-07-31T09:00:00.000Z',
+    }))
+
+    render(<TrackerPage events={events} onChange={vi.fn()} />)
+
+    expect(screen.getByRole('button', { name: '창세기, 1/50장, 펼치기' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '마태복음, 1/28장, 펼치기' })).toBeInTheDocument()
+    expect(bookIdReads).toBeLessThanOrEqual(events.length * 2)
   })
 
   it('전체·구약·신약·읽는 중 필터를 적용하고 범위 밖 이벤트는 무시한다', async () => {
@@ -95,7 +134,10 @@ describe('TrackerPage', () => {
     expect(within(firstChapter).getByText('×2')).toBeInTheDocument()
 
     await user.click(firstChapter)
-    const detail = screen.getByRole('region', { name: '창세기 1장 상세' })
+    const detail = screen.getByRole('region', { name: '창세기 1장' })
+    const detailTitle = within(detail).getByRole('heading', { name: '창세기 1장' })
+    expect(detail).toHaveAttribute('aria-labelledby', detailTitle.id)
+    expect(detail).toHaveAttribute('aria-live', 'polite')
     expect(within(detail).getByText('현재 2회 읽음')).toBeInTheDocument()
 
     await user.click(within(detail).getByRole('button', { name: '창세기 1장 + 읽었어요' }))
