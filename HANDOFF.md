@@ -25,6 +25,7 @@
 - 일~토 실제 월간 달력과 읽은 날
 - 최근 기록 실제 시각순 정렬과 개별 취소
 - 오늘·통독표·진행·설정 4탭
+- 최초 방문 3단계 튜토리얼과 설정의 `튜토리얼 다시 보기`
 
 ## 저장·무결성
 
@@ -47,8 +48,8 @@ npm audit
 
 최근 기준:
 
-- 테스트 파일 12개
-- 테스트 96개 통과
+- 테스트 파일 14개
+- 테스트 99개 통과
 - ESLint 통과
 - TypeScript/Vite 빌드 성공
 - npm audit 취약점 0건
@@ -65,6 +66,7 @@ npm audit
 - `src/features/today/**` — 오늘 추천
 - `src/features/tracker/**` — 66권 통독표
 - `src/features/progress/**` — 진행률·월간 달력·최근 기록
+- `src/features/tutorial/**` — 최초 실행 안내와 완료 상태 저장
 - `src/app/App.tsx` — 4탭 통합
 
 ## 다음 우선순위
