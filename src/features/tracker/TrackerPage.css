@@ -1,0 +1,214 @@
+.tracker {
+  --tracker-primary: #1d4ed8;
+  --tracker-primary-strong: #1e40af;
+  --tracker-surface: #ffffff;
+  --tracker-surface-muted: #f1f5f9;
+  --tracker-border: #cbd5e1;
+  --tracker-text: #0f172a;
+  --tracker-muted: #64748b;
+  color: var(--tracker-text);
+  width: 100%;
+}
+
+.tracker button,
+.tracker input {
+  box-sizing: border-box;
+  min-height: 44px;
+  font: inherit;
+}
+
+.tracker button {
+  color: inherit;
+  cursor: pointer;
+}
+
+.tracker button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.tracker button:focus-visible,
+.tracker input:focus-visible {
+  outline: 3px solid var(--tracker-primary);
+  outline-offset: 2px;
+}
+
+.tracker__search {
+  display: grid;
+  gap: 0.375rem;
+  margin-block: 1rem;
+}
+
+.tracker__label {
+  font-weight: 700;
+}
+
+.tracker__search input {
+  width: 100%;
+  border: 1px solid var(--tracker-border);
+  border-radius: 0.75rem;
+  background: var(--tracker-surface);
+  color: var(--tracker-text);
+  padding: 0.625rem 0.875rem;
+}
+
+.tracker__filters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-block-end: 1rem;
+}
+
+.tracker__filters button {
+  border: 1px solid var(--tracker-border);
+  border-radius: 999px;
+  background: var(--tracker-surface);
+  padding-inline: 0.5rem;
+}
+
+.tracker__filters button[aria-pressed='true'] {
+  border-color: var(--tracker-primary);
+  background: var(--tracker-primary);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.tracker__books {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.tracker__book {
+  overflow: hidden;
+  border: 1px solid var(--tracker-border);
+  border-radius: 0.875rem;
+  background: var(--tracker-surface);
+}
+
+.tracker__book-toggle {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border: 0;
+  background: transparent;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 700;
+}
+
+.tracker__book-toggle::after {
+  content: '▾';
+  color: var(--tracker-muted);
+  transition: transform 150ms ease;
+}
+
+.tracker__book-toggle[aria-expanded='true']::after {
+  transform: rotate(180deg);
+}
+
+.tracker__chapters {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+  gap: 0.5rem;
+  border-top: 1px solid var(--tracker-border);
+  padding: 0.75rem;
+}
+
+.tracker__chapter {
+  position: relative;
+  border: 1px solid var(--tracker-border);
+  border-radius: 0.625rem;
+  background: var(--tracker-surface-muted);
+  padding: 0.25rem;
+}
+
+.tracker__chapter[aria-pressed='true'] {
+  border-color: var(--tracker-primary);
+  box-shadow: inset 0 0 0 1px var(--tracker-primary);
+}
+
+.tracker__chapter span {
+  display: block;
+  color: var(--tracker-primary-strong);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.tracker__detail {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.625rem;
+  border-radius: 0.75rem;
+  background: var(--tracker-surface-muted);
+  padding: 1rem;
+}
+
+.tracker__detail h3,
+.tracker__detail p {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.tracker__detail button {
+  border: 1px solid var(--tracker-primary);
+  border-radius: 0.625rem;
+  background: var(--tracker-surface);
+  color: var(--tracker-primary-strong);
+  padding: 0.5rem;
+  font-weight: 700;
+}
+
+.tracker__detail button:last-child {
+  background: var(--tracker-primary);
+  color: #ffffff;
+}
+
+@media (max-width: 359px) {
+  .tracker__filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tracker__detail {
+    grid-template-columns: 1fr;
+  }
+
+  .tracker__detail button {
+    grid-column: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tracker__book-toggle::after {
+    transition: none;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .tracker {
+    --tracker-primary: #60a5fa;
+    --tracker-primary-strong: #93c5fd;
+    --tracker-surface: #1e293b;
+    --tracker-surface-muted: #0f172a;
+    --tracker-border: #475569;
+    --tracker-text: #f8fafc;
+    --tracker-muted: #cbd5e1;
+  }
+
+  .tracker__filters button[aria-pressed='true'],
+  .tracker__detail button:last-child {
+    color: #0f172a;
+  }
+}
+
+[data-theme='dark'] .tracker {
+  --tracker-primary: #60a5fa;
+  --tracker-primary-strong: #93c5fd;
+  --tracker-surface: #1e293b;
+  --tracker-surface-muted: #0f172a;
+  --tracker-border: #475569;
+  --tracker-text: #f8fafc;
+  --tracker-muted: #cbd5e1;
+}
