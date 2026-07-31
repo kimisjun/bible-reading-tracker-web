@@ -1,4 +1,8 @@
-import { migrateToCurrentSchema } from './migrations'
+import {
+  CURRENT_SCHEMA_VERSION,
+  InvalidStorageDataError,
+  migrateToCurrentSchema,
+} from './migrations'
 import { createDefaultAppState, type AppState } from './schema'
 
 export const APP_STATE_STORAGE_KEY = 'bible-reading-tracker:app-state'
@@ -40,6 +44,12 @@ export function createAppStateRepository(storage: StorageLike): AppStateReposito
       const serialized = storage.getItem(APP_STATE_STORAGE_KEY)
       return serialized === null ? createDefaultAppState() : parseStoredState(serialized)
     },
-    save: (state) => storage.setItem(APP_STATE_STORAGE_KEY, JSON.stringify(state)),
+    save: (state) => {
+      if (state.schemaVersion !== CURRENT_SCHEMA_VERSION) {
+        throw new InvalidStorageDataError()
+      }
+      const validatedState = migrateToCurrentSchema(state)
+      storage.setItem(APP_STATE_STORAGE_KEY, JSON.stringify(validatedState))
+    },
   }
 }

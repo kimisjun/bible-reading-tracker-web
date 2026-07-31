@@ -1,4 +1,5 @@
 import type { ReadingEvent } from '../domain/reading'
+import { bibleBooks } from '../data/bibleBooks'
 import { createDefaultAppState, type AppState } from './schema'
 
 export const CURRENT_SCHEMA_VERSION = 1 as const
@@ -21,27 +22,45 @@ export class InvalidStorageDataError extends Error {
 
 type UnknownRecord = Record<string, unknown>
 
+const chapterCountByBookId = new Map(bibleBooks.map((book) => [book.id, book.chapters]))
+
 function isRecord(value: unknown): value is UnknownRecord {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
 function isIsoDate(value: unknown): value is string {
-  return (
-    typeof value === 'string' &&
-    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/.test(value) &&
-    !Number.isNaN(Date.parse(value))
+  if (typeof value !== 'string') {
+    return false
+  }
+
+  const match = /^(\d{4})-(\d{2})-(\d{2})T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/.exec(
+    value,
   )
+  if (match === null || Number.isNaN(Date.parse(value))) {
+    return false
+  }
+
+  const year = Number(match[1])
+  const month = Number(match[2])
+  const day = Number(match[3])
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate()
+  return month >= 1 && month <= 12 && day >= 1 && day <= daysInMonth
 }
 
 function toReadingEvent(value: unknown): ReadingEvent | null {
+  const chapterCount = isRecord(value) && typeof value.bookId === 'string'
+    ? chapterCountByBookId.get(value.bookId)
+    : undefined
+
   if (
     !isRecord(value) ||
     typeof value.id !== 'string' ||
     value.id.length === 0 ||
     typeof value.bookId !== 'string' ||
-    value.bookId.length === 0 ||
+    chapterCount === undefined ||
     !Number.isInteger(value.chapter) ||
     (value.chapter as number) < 1 ||
+    (value.chapter as number) > chapterCount ||
     (value.delta !== 1 && value.delta !== -1) ||
     !isIsoDate(value.occurredAt) ||
     (value.batchId !== undefined && typeof value.batchId !== 'string') ||
@@ -94,10 +113,13 @@ function isCurrentAppState(value: UnknownRecord): value is UnknownRecord & AppSt
 
 export function migrateToCurrentSchema(value: unknown): AppState {
   if (!isRecord(value)) {
-    return createDefaultAppState()
+    throw new InvalidStorageDataError()
   }
 
   if (!('schemaVersion' in value)) {
+    if (!Array.isArray(value.readingEvents)) {
+      throw new InvalidStorageDataError()
+    }
     return migrateLegacyPrototype(value)
   }
 
@@ -109,5 +131,16 @@ export function migrateToCurrentSchema(value: unknown): AppState {
     throw new InvalidStorageDataError()
   }
 
-  return value
+  return {
+    schemaVersion: CURRENT_SCHEMA_VERSION,
+    readingEvents: value.readingEvents.map((event) => toReadingEvent(event) as ReadingEvent),
+    commonPlan: value.commonPlan === null ? null : { ...value.commonPlan },
+    personalPlan: value.personalPlan === null ? null : { ...value.personalPlan },
+    settings: {
+      theme: value.settings.theme,
+      readerName: value.settings.readerName,
+      reminder:
+        value.settings.reminder === null ? null : { ...value.settings.reminder },
+    },
+  }
 }
