@@ -82,7 +82,10 @@ export function getRecentReadingEvents(
   events: readonly ReadingEvent[],
   limit = events.length,
 ): readonly ReadingEvent[] {
-  return [...events]
-    .sort((left, right) => right.occurredAt.localeCompare(left.occurredAt))
+  return events
+    .map((event, index) => ({ event, index, epoch: Date.parse(event.occurredAt) }))
+    .filter(({ epoch }) => Number.isFinite(epoch))
+    .sort((left, right) => right.epoch - left.epoch || right.index - left.index)
     .slice(0, limit)
+    .map(({ event }) => event)
 }

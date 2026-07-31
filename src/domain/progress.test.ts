@@ -152,4 +152,37 @@ describe('getMonthlyActivityDates', () => {
 
     expect(getMonthlyActivityDates(events, '2026-07', utcDateKey)).toEqual(['2026-07-02'])
   })
+
+  it('아직 취소되지 않은 원본 +1 읽기 이벤트가 발생한 날짜만 활동일로 센다', () => {
+    const cancelledRead = read('cancelled-read', 'genesis', 1, '2026-07-01T09:00:00.000Z')
+    const originalMinus: ReadingEvent = {
+      id: 'original-minus',
+      bookId: 'genesis',
+      chapter: 2,
+      delta: -1,
+      occurredAt: '2026-07-02T09:00:00.000Z',
+    }
+    const events: readonly ReadingEvent[] = [
+      cancelledRead,
+      {
+        ...cancelledRead,
+        id: 'undo-read',
+        delta: -1,
+        occurredAt: '2026-07-03T09:00:00.000Z',
+        undoneEventId: cancelledRead.id,
+      },
+      originalMinus,
+      {
+        ...originalMinus,
+        id: 'undo-minus',
+        delta: 1,
+        occurredAt: '2026-07-04T09:00:00.000Z',
+        undoneEventId: originalMinus.id,
+      },
+      read('active-read', 'genesis', 3, '2026-07-05T09:00:00.000Z'),
+    ]
+    const utcDateKey = (date: Date) => date.toISOString().slice(0, 10)
+
+    expect(getMonthlyActivityDates(events, '2026-07', utcDateKey)).toEqual(['2026-07-05'])
+  })
 })

@@ -19,6 +19,10 @@ function currentMonth(): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 }
 
+function isValidMonth(month: string | undefined): month is string {
+  return month !== undefined && /^\d{4}-(0[1-9]|1[0-2])$/.test(month)
+}
+
 function moveMonth(month: string, offset: number): string {
   const [year, monthNumber] = month.split('-').map(Number)
   const date = new Date(year, monthNumber - 1 + offset, 1)
@@ -38,10 +42,14 @@ function formatOccurredAt(occurredAt: string): string {
 
 export function ProgressPage({ events, onUndo, initialMonth }: ProgressPageProps) {
   const progress = calculateReadingProgress(events)
-  const [month, setMonth] = useState(initialMonth ?? currentMonth())
+  const [month, setMonth] = useState(() => isValidMonth(initialMonth) ? initialMonth : currentMonth())
   const [year, monthNumber] = month.split('-').map(Number)
   const monthLabel = `${year}년 ${monthNumber}월`
   const activityDates = getMonthlyActivityDates(events, month)
+  const activityDateSet = new Set(activityDates)
+  const leadingBlankCount = new Date(year, monthNumber - 1, 1).getDay()
+  const daysInMonth = new Date(year, monthNumber, 0).getDate()
+  const calendarDays = Array.from({ length: daysInMonth }, (_, index) => index + 1)
   const recentEvents = getRecentReadingEvents(events, 5)
   const undoneEventIds = new Set(
     events.flatMap((event) => event.undoneEventId ? [event.undoneEventId] : []),
@@ -70,7 +78,7 @@ export function ProgressPage({ events, onUndo, initialMonth }: ProgressPageProps
 
       <section className="progress-activity" aria-labelledby="progress-activity-title">
         <div className="progress-activity__header">
-          <h3 id="progress-activity-title">{monthLabel}</h3>
+          <h3 id="progress-activity-title" aria-live="polite">{monthLabel}</h3>
           <div className="progress-activity__navigation">
             <button type="button" aria-label="이전 달" style={{ minHeight: 44 }} onClick={() => setMonth(moveMonth(month, -1))}>
               <span aria-hidden="true">‹</span>
@@ -80,15 +88,37 @@ export function ProgressPage({ events, onUndo, initialMonth }: ProgressPageProps
             </button>
           </div>
         </div>
-        {activityDates.length > 0 ? (
-          <ul className="progress-activity__dates" aria-label={`${monthLabel} 읽은 날짜`}>
-            {activityDates.map((date) => (
-              <li key={date}>{monthNumber}월 {Number(date.slice(-2))}일</li>
-            ))}
-          </ul>
-        ) : (
-          <p className="progress-empty">이 달에는 읽기 기록이 없어요.</p>
-        )}
+        <div className="progress-calendar" role="grid" aria-label={`${monthLabel} 달력`}>
+          {['일', '월', '화', '수', '목', '금', '토'].map((weekday) => (
+            <div className="progress-calendar__weekday" role="columnheader" key={weekday}>
+              {weekday}
+            </div>
+          ))}
+          {Array.from({ length: leadingBlankCount }, (_, index) => (
+            <div
+              aria-hidden="true"
+              className="progress-calendar__blank"
+              key={`blank-${index}`}
+              role="presentation"
+            />
+          ))}
+          {calendarDays.map((day) => {
+            const dateKey = `${month}-${String(day).padStart(2, '0')}`
+            const isActive = activityDateSet.has(dateKey)
+            const status = isActive ? '읽은 날' : '기록 없음'
+            return (
+              <div
+                aria-label={`${monthNumber}월 ${day}일, ${status}`}
+                className={`progress-calendar__day${isActive ? ' progress-calendar__day--active' : ''}`}
+                key={dateKey}
+                role="gridcell"
+              >
+                <span>{day}</span>
+                <span className="progress-calendar__status">{status}</span>
+              </div>
+            )
+          })}
+        </div>
       </section>
 
       <section className="progress-recent" aria-labelledby="progress-recent-title">
@@ -97,7 +127,7 @@ export function ProgressPage({ events, onUndo, initialMonth }: ProgressPageProps
           <ul aria-label="최근 읽기 기록">
             {recentEvents.map((event) => {
               const eventLabel = `${bookNames.get(event.bookId) ?? event.bookId} ${event.chapter}장`
-              const canUndo = event.delta === 1 && !event.undoneEventId && !undoneEventIds.has(event.id)
+              const canUndo = !event.undoneEventId && !undoneEventIds.has(event.id)
               return (
                 <li key={event.id}>
                   <div>

@@ -81,10 +81,19 @@ export function getMonthlyActivityDates(
   month: string,
   toDateKey: ActivityDateKey = toLocalDateKey,
 ): readonly string[] {
+  const undoneEventIds = new Set(
+    events.flatMap((event) => (event.undoneEventId ? [event.undoneEventId] : [])),
+  )
+
   return [
     ...new Set(
       events
-        .filter((event) => event.delta > 0)
+        .filter(
+          (event) =>
+            event.delta === 1 &&
+            event.undoneEventId === undefined &&
+            !undoneEventIds.has(event.id),
+        )
         .map((event) => new Date(event.occurredAt))
         .filter((date) => !Number.isNaN(date.getTime()))
         .map(toDateKey)

@@ -119,26 +119,59 @@
   outline-offset: 2px;
 }
 
-.progress-activity__dates,
+.progress-calendar,
 .progress-recent ul {
   margin: 1rem 0 0;
   padding: 0;
-  list-style: none;
 }
 
-.progress-activity__dates {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+.progress-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.25rem;
 }
 
-.progress-activity__dates li {
-  padding: 0.5rem 0.75rem;
-  border-radius: 999px;
+.progress-calendar__weekday {
+  padding-block: 0.25rem;
+  color: var(--progress-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.progress-calendar__day {
+  display: grid;
+  min-width: 0;
+  min-height: 3.25rem;
+  align-content: center;
+  gap: 0.125rem;
+  padding: 0.25rem 0.125rem;
+  border: 1px solid var(--progress-border);
+  border-radius: 0.5rem;
+  background: var(--progress-surface-subtle);
+  text-align: center;
+}
+
+.progress-calendar__day--active {
+  border-color: var(--progress-primary);
   color: var(--progress-primary-strong);
   background: var(--progress-primary-soft);
-  font-size: 0.875rem;
   font-weight: 700;
+}
+
+.progress-calendar__status {
+  color: var(--progress-muted);
+  font-size: 0.625rem;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.progress-calendar__day--active .progress-calendar__status {
+  color: inherit;
+}
+
+.progress-recent ul {
+  list-style: none;
 }
 
 .progress-recent li {

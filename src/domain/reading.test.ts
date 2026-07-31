@@ -91,18 +91,40 @@ describe('reading events', () => {
     ])
   })
 
-  it('최근 기록을 시간 역순으로 반환하며 원본 순서를 바꾸지 않는다', () => {
+  it('최근 기록을 실제 발생 시간 역순으로 반환하며 원본 순서를 바꾸지 않는다', () => {
     const events = [
-      event(),
+      event({ id: 'event-1', occurredAt: '2026-07-31T10:00:00+09:00' }),
       event({ id: 'event-2', chapter: 2, occurredAt: '2026-07-31T03:00:00.000Z' }),
-      event({ id: 'event-3', chapter: 3, occurredAt: '2026-07-31T02:00:00.000Z' }),
+      event({ id: 'event-3', chapter: 3, occurredAt: '2026-07-30T23:00:00-05:00' }),
     ]
 
     expect(getRecentReadingEvents(events).map((item) => item.id)).toEqual([
-      'event-2',
       'event-3',
+      'event-2',
       'event-1',
     ])
     expect(events.map((item) => item.id)).toEqual(['event-1', 'event-2', 'event-3'])
+  })
+
+  it('잘못된 발생 시각은 방어적으로 최근 기록에서 제외한다', () => {
+    const events = [
+      event({ id: 'valid' }),
+      event({ id: 'invalid', occurredAt: 'not-a-date' }),
+    ]
+
+    expect(getRecentReadingEvents(events).map((item) => item.id)).toEqual(['valid'])
+  })
+
+  it('발생 시각이 같으면 원 배열에서 더 나중에 추가된 기록을 먼저 반환한다', () => {
+    const occurredAt = '2026-07-31T01:00:00.000Z'
+    const events = [
+      event({ id: 'older-position', occurredAt }),
+      event({ id: 'newer-position', occurredAt }),
+    ]
+
+    expect(getRecentReadingEvents(events).map((item) => item.id)).toEqual([
+      'newer-position',
+      'older-position',
+    ])
   })
 })
