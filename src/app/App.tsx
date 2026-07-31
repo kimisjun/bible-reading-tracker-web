@@ -1,7 +1,12 @@
-import { useRef, useState, type KeyboardEvent } from 'react'
+import { useCallback, useRef, useState, type KeyboardEvent } from 'react'
 import { ProgressPage } from '../features/progress/ProgressPage'
 import { TodayPage } from '../features/today/TodayPage'
 import { TrackerPage } from '../features/tracker/TrackerPage'
+import { Tutorial } from '../features/tutorial/Tutorial'
+import {
+  hasCompletedTutorial,
+  markTutorialCompleted,
+} from '../features/tutorial/tutorialStorage'
 import { useReadingState } from './useReadingState'
 
 const pages = {
@@ -31,9 +36,15 @@ type PageId = keyof typeof pages
 
 export function App() {
   const [activePage, setActivePage] = useState<PageId>('today')
+  const [showTutorial, setShowTutorial] = useState(() => !hasCompletedTutorial())
   const reading = useReadingState()
   const pageEntries = Object.entries(pages) as [PageId, (typeof pages)[PageId]][]
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
+
+  const completeTutorial = useCallback(() => {
+    markTutorialCompleted()
+    setShowTutorial(false)
+  }, [])
 
   const selectTab = (index: number) => {
     const [pageId] = pageEntries[index]
@@ -97,6 +108,13 @@ export function App() {
               <div className="settings-placeholder">
                 <h2>설정</h2>
                 <p>통독 계획과 화면, 데이터 설정을 여기에서 관리할 수 있어요.</p>
+                <button
+                  className="settings-tutorial-button"
+                  type="button"
+                  onClick={() => setShowTutorial(true)}
+                >
+                  튜토리얼 다시 보기
+                </button>
               </div>
             )}
           </section>
@@ -128,6 +146,7 @@ export function App() {
           )}
         </div>
       </nav>
+      {showTutorial && <Tutorial onComplete={completeTutorial} />}
     </div>
   )
 }

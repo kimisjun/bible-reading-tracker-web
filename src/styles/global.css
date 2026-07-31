@@ -213,6 +213,23 @@ h1 {
   }
 }
 
+.settings-tutorial-button {
+  min-height: 44px;
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--color-primary);
+  border-radius: 0.8rem;
+  background: transparent;
+  color: var(--color-primary);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.settings-tutorial-button:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --color-primary: #60a5fa;

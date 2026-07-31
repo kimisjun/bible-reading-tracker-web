@@ -1,0 +1,142 @@
+.tutorial-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgb(15 23 42 / 72%);
+  backdrop-filter: blur(6px);
+}
+
+.tutorial-dialog {
+  width: min(100%, 31rem);
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  padding: clamp(1.25rem, 5vw, 2rem);
+  border: 1px solid var(--border-color, #dbe4f0);
+  border-radius: 1.5rem;
+  background: var(--surface-color, #fff);
+  color: var(--text-color, #172033);
+  box-shadow: 0 1.5rem 4rem rgb(15 23 42 / 32%);
+  text-align: center;
+}
+
+.tutorial-dialog:focus-visible {
+  outline: 3px solid var(--focus-color, #f59e0b);
+  outline-offset: 3px;
+}
+
+.tutorial-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--muted-color, #526078);
+  font-weight: 700;
+}
+
+.tutorial-skip,
+.tutorial-button {
+  min-height: 44px;
+  border-radius: 0.85rem;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.tutorial-skip {
+  padding: 0.4rem 0.7rem;
+  border: 0;
+  background: transparent;
+  color: var(--primary-color, #1746a2);
+}
+
+.tutorial-icon {
+  margin: 1.5rem auto 1rem;
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.tutorial-dialog h2 {
+  margin: 0;
+  font-size: clamp(1.4rem, 5vw, 1.9rem);
+  line-height: 1.3;
+}
+
+.tutorial-dialog p {
+  margin: 1rem 0 0;
+  color: var(--muted-color, #526078);
+  line-height: 1.75;
+}
+
+.tutorial-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 1.5rem 0;
+}
+
+.tutorial-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: var(--border-color, #cbd5e1);
+}
+
+.tutorial-dot--active {
+  width: 1.5rem;
+  background: var(--primary-color, #1746a2);
+}
+
+.tutorial-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+}
+
+.tutorial-button {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--primary-color, #1746a2);
+}
+
+.tutorial-button--primary {
+  background: var(--primary-color, #1746a2);
+  color: #fff;
+}
+
+.tutorial-button--secondary {
+  background: transparent;
+  color: var(--primary-color, #1746a2);
+}
+
+.tutorial-skip:focus-visible,
+.tutorial-button:focus-visible {
+  outline: 3px solid var(--focus-color, #f59e0b);
+  outline-offset: 2px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .tutorial-dialog {
+    --surface-color: #172033;
+    --text-color: #f8fafc;
+    --muted-color: #cbd5e1;
+    --border-color: #334155;
+    --primary-color: #8db5ff;
+  }
+
+  .tutorial-button--primary {
+    color: #10234b;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .tutorial-dialog {
+    animation: tutorial-enter 180ms ease-out;
+  }
+
+  @keyframes tutorial-enter {
+    from { opacity: 0; transform: translateY(0.75rem) scale(0.98); }
+    to { opacity: 1; transform: none; }
+  }
+}

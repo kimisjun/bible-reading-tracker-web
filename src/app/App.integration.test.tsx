@@ -1,10 +1,12 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { TUTORIAL_STORAGE_KEY } from '../features/tutorial/tutorialStorage'
 import { App } from './App'
 
 describe('App reading journey', () => {
   beforeEach(() => {
     window.localStorage.clear()
+    window.localStorage.setItem(TUTORIAL_STORAGE_KEY, 'completed')
   })
 
   it('오늘 읽기를 기록하고 다시 열면 다음 장을 추천한다', async () => {

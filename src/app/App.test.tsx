@@ -1,10 +1,12 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { TUTORIAL_STORAGE_KEY } from '../features/tutorial/tutorialStorage'
 import { App } from './App'
 
 describe('App', () => {
   beforeEach(() => {
     window.localStorage.clear()
+    window.localStorage.setItem(TUTORIAL_STORAGE_KEY, 'completed')
   })
 
   it('저장 데이터를 불러오지 못하면 자동 초기화하지 않고 복구 안내를 alert로 보여준다', () => {
