@@ -1,5 +1,6 @@
 import { bibleBooks } from '../../data/bibleBooks'
 import type { ReadingEvent } from '../../domain/reading'
+import { getTodayRecommendation } from './recommendation'
 import './TodayPage.css'
 
 export type TodayPageProps = Readonly<{
@@ -9,36 +10,9 @@ export type TodayPageProps = Readonly<{
 }>
 
 export function TodayPage({ events, onRead, onOpenTracker }: TodayPageProps) {
-  const chapterCounts = events.reduce((counts, event) => {
-    const key = `${event.bookId}:${event.chapter}`
-    const previous = counts.get(key)
-    counts.set(key, {
-      bookIndex: bibleBooks.findIndex((book) => book.id === event.bookId),
-      chapter: event.chapter,
-      count: (previous?.count ?? 0) + event.delta,
-    })
-    return counts
-  }, new Map<string, { bookIndex: number; chapter: number; count: number }>())
-
-  const lastRead = [...chapterCounts.values()].reduce(
-    (latest, entry) => {
-      if (
-        entry.count >= 1 &&
-        (entry.bookIndex > latest.bookIndex ||
-          (entry.bookIndex === latest.bookIndex && entry.chapter > latest.chapter))
-      ) {
-        return { bookIndex: entry.bookIndex, chapter: entry.chapter }
-      }
-      return latest
-    },
-    { bookIndex: 0, chapter: 0 },
-  )
-  const currentBook = bibleBooks[lastRead.bookIndex]
-  const reachedBookEnd = lastRead.chapter === currentBook.chapters
-  const book = reachedBookEnd
-    ? bibleBooks[(lastRead.bookIndex + 1) % bibleBooks.length]
-    : currentBook
-  const chapter = reachedBookEnd ? 1 : lastRead.chapter + 1
+  const recommendation = getTodayRecommendation(events)
+  const book = bibleBooks.find((candidate) => candidate.id === recommendation.bookId) ?? bibleBooks[0]
+  const chapter = recommendation.chapter
 
   return (
     <section className="today-page" aria-labelledby="today-page-title">

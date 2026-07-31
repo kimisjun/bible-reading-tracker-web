@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react'
-import type { StorageLike } from '../storage/repository'
+import { createElement, StrictMode, type ReactNode } from 'react'
+import { APP_STATE_STORAGE_KEY, type StorageLike } from '../storage/repository'
 import { useReadingState } from './useReadingState'
 
 class MemoryStorage implements StorageLike {
@@ -14,12 +15,39 @@ class MemoryStorage implements StorageLike {
   }
 }
 
+class FailingSaveStorage extends MemoryStorage {
+  failSave = false
+
+  override setItem(key: string, value: string): void {
+    if (this.failSave) throw new DOMException('저장 공간이 부족합니다.', 'QuotaExceededError')
+    super.setItem(key, value)
+  }
+}
+
 function sequential(values: readonly string[]) {
   let index = 0
   return () => values[index++] ?? values.at(-1) ?? ''
 }
 
 describe('useReadingState', () => {
+  it('StrictMode에서도 한 번의 읽기 동작마다 ID, 시각, 저장을 한 번만 수행한다', () => {
+    const storage = new MemoryStorage()
+    const setItem = vi.spyOn(storage, 'setItem')
+    const dependencies = {
+      createId: vi.fn(() => 'strict-event'),
+      now: vi.fn(() => '2026-07-31T04:00:00.000Z'),
+    }
+    const wrapper = ({ children }: { children: ReactNode }) =>
+      createElement(StrictMode, null, children)
+    const { result } = renderHook(() => useReadingState(storage, dependencies), { wrapper })
+
+    act(() => result.current.read('genesis', 1))
+
+    expect(dependencies.createId).toHaveBeenCalledOnce()
+    expect(dependencies.now).toHaveBeenCalledOnce()
+    expect(setItem).toHaveBeenCalledOnce()
+  })
+
   it('읽었어요를 누르면 이벤트를 추가하고 같은 저장소에서 다시 불러온다', () => {
     const storage = new MemoryStorage()
     const dependencies = {
@@ -80,4 +108,87 @@ describe('useReadingState', () => {
       undoneEventId: 'event-1',
     })
   })
+
+  it('초기 저장 데이터 읽기가 실패해도 기본 상태와 복구 가능한 error를 반환한다', () => {
+    const storage: StorageLike = {
+      getItem: () => { throw new DOMException('접근이 거부되었습니다.', 'SecurityError') },
+      setItem: () => undefined,
+    }
+
+    const { result } = renderHook(() => useReadingState(storage))
+
+    expect(result.current.events).toEqual([])
+    expect(result.current.error).toMatchObject({ name: 'SecurityError' })
+  })
+
+  it('저장 실패 시 화면 상태와 기존 bytes를 보존하고 error를 반환한다', () => {
+    const storage = new FailingSaveStorage()
+    const dependencies = {
+      createId: sequential(['saved-event', 'failed-event']),
+      now: () => '2026-07-31T04:00:00.000Z',
+    }
+    const { result } = renderHook(() => useReadingState(storage, dependencies))
+    act(() => result.current.read('genesis', 1))
+    const durableBytes = storage.getItem(APP_STATE_STORAGE_KEY)
+    storage.failSave = true
+
+    act(() => result.current.read('genesis', 2))
+
+    expect(result.current.events.map(({ id }) => id)).toEqual(['saved-event'])
+    expect(storage.getItem(APP_STATE_STORAGE_KEY)).toBe(durableBytes)
+    expect(result.current.error).toMatchObject({ name: 'QuotaExceededError' })
+  })
+
+  it('같은 저장소를 쓰는 두 hook가 번갈아 기록해도 기존 이벤트를 잃지 않는다', () => {
+    const storage = new MemoryStorage()
+    const firstDependencies = {
+      createId: sequential(['first-1', 'first-2']),
+      now: () => '2026-07-31T04:00:00.000Z',
+    }
+    const secondDependencies = {
+      createId: () => 'second-1',
+      now: () => '2026-07-31T05:00:00.000Z',
+    }
+    const first = renderHook(() => useReadingState(storage, firstDependencies))
+    const second = renderHook(() => useReadingState(storage, secondDependencies))
+
+    act(() => first.result.current.read('genesis', 1))
+    act(() => second.result.current.read('genesis', 2))
+    act(() => first.result.current.read('genesis', 3))
+
+    expect(first.result.current.events.map(({ id }) => id)).toEqual([
+      'first-1',
+      'second-1',
+      'first-2',
+    ])
+  })
+
+  it('기본 localStorage의 다른 탭 storage 이벤트를 받으면 최신 상태를 다시 불러온다', () => {
+    window.localStorage.clear()
+    const { result } = renderHook(() => useReadingState())
+    window.localStorage.setItem(APP_STATE_STORAGE_KEY, JSON.stringify({
+      schemaVersion: 1,
+      readingEvents: [eventFixture('other-tab-event')],
+      commonPlan: null,
+      personalPlan: null,
+      settings: { theme: 'light', readerName: '', reminder: null },
+    }))
+
+    act(() => window.dispatchEvent(new StorageEvent('storage', {
+      key: APP_STATE_STORAGE_KEY,
+      storageArea: window.localStorage,
+    })))
+
+    expect(result.current.events.map(({ id }) => id)).toEqual(['other-tab-event'])
+  })
 })
+
+function eventFixture(id: string) {
+  return {
+    id,
+    bookId: 'genesis',
+    chapter: 1,
+    delta: 1 as const,
+    occurredAt: '2026-07-31T04:00:00.000Z',
+  }
+}

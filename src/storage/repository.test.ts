@@ -315,4 +315,41 @@ describe('AppStateRepository', () => {
       settings: { theme: 'light', readerName: '', reminder: null },
     })
   })
+
+  it.each([
+    ['중복 이벤트 ID', [event('same', 'genesis', 1, 1), event('same', 'genesis', 2, 1)]],
+    ['고아 취소 참조', [{ ...event('undo', 'genesis', 1, 1), undoneEventId: 'missing' }]],
+    ['취소 대상 장 불일치', [
+      event('read-1', 'genesis', 1, 1),
+      event('read-2', 'genesis', 2, 1),
+      { ...event('undo-1', 'genesis', 2, -1), undoneEventId: 'read-1' },
+    ]],
+    ['누적 음수', [event('negative', 'genesis', 1, -1)]],
+  ])('%s 이벤트열을 거부한다', (_label, readingEvents) => {
+    const repository = createAppStateRepository(new MemoryStorage())
+    const state = {
+      schemaVersion: 1,
+      readingEvents,
+      commonPlan: null,
+      personalPlan: null,
+      settings: { theme: 'light', readerName: '', reminder: null },
+    } as AppState
+
+    expect(() => repository.save(state)).toThrowError(InvalidStorageDataError)
+  })
 })
+
+function event(
+  id: string,
+  bookId: string,
+  chapter: number,
+  delta: 1 | -1,
+) {
+  return {
+    id,
+    bookId,
+    chapter,
+    delta,
+    occurredAt: '2026-07-31T01:00:00.000Z',
+  }
+}

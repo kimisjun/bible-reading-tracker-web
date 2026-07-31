@@ -7,6 +7,16 @@ describe('App', () => {
     window.localStorage.clear()
   })
 
+  it('저장 데이터를 불러오지 못하면 자동 초기화하지 않고 복구 안내를 alert로 보여준다', () => {
+    window.localStorage.setItem('bible-reading-tracker:app-state', '{broken')
+
+    render(<App />)
+
+    expect(screen.getByRole('alert')).toHaveTextContent('저장 데이터를 불러오거나 저장하지 못했습니다')
+    expect(screen.getByRole('alert')).toHaveTextContent('백업을 복원하거나 브라우저 저장소 설정을 확인해 주세요')
+    expect(window.localStorage.getItem('bible-reading-tracker:app-state')).toBe('{broken')
+  })
+
   it('앱 이름과 개인 오프라인판 안내를 보여준다', () => {
     render(<App />)
 

@@ -63,6 +63,14 @@ export function App() {
         <p className="subtitle">성경 66권 1,189장을 차근차근 기록해 보세요.</p>
       </header>
 
+      {reading.error && (
+        <div role="alert" className="storage-error">
+          <strong>저장 데이터를 불러오거나 저장하지 못했습니다.</strong>
+          <p>백업을 복원하거나 브라우저 저장소 설정을 확인해 주세요.</p>
+          <small>{reading.error.message}</small>
+        </div>
+      )}
+
       <main>
         {pageEntries.map(([pageId]) => (
           <section

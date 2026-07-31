@@ -80,13 +80,48 @@ function toReadingEvent(value: unknown): ReadingEvent | null {
   }
 }
 
+function hasValidEventSequence(events: readonly ReadingEvent[]): boolean {
+  const eventsById = new Map<string, ReadingEvent>()
+  const undoneEventIds = new Set<string>()
+  const counts = new Map<string, number>()
+
+  for (const event of events) {
+    if (eventsById.has(event.id)) return false
+
+    if (event.undoneEventId !== undefined) {
+      const target = eventsById.get(event.undoneEventId)
+      if (
+        target === undefined ||
+        undoneEventIds.has(target.id) ||
+        target.bookId !== event.bookId ||
+        target.chapter !== event.chapter ||
+        target.delta !== -event.delta
+      ) {
+        return false
+      }
+      undoneEventIds.add(target.id)
+    }
+
+    const key = `${event.bookId}:${event.chapter}`
+    const nextCount = (counts.get(key) ?? 0) + event.delta
+    if (nextCount < 0) return false
+    counts.set(key, nextCount)
+    eventsById.set(event.id, event)
+  }
+
+  return true
+}
+
 function migrateLegacyPrototype(value: UnknownRecord): AppState {
   const defaults = createDefaultAppState()
   const readingEvents = Array.isArray(value.readingEvents)
-    ? value.readingEvents.flatMap((event) => {
+    ? value.readingEvents.reduce<ReadingEvent[]>((safeEvents, event) => {
         const mapped = toReadingEvent(event)
-        return mapped === null ? [] : [mapped]
-      })
+        if (mapped !== null && hasValidEventSequence([...safeEvents, mapped])) {
+          safeEvents.push(mapped)
+        }
+        return safeEvents
+      }, [])
     : []
 
   return { ...defaults, readingEvents }
@@ -100,6 +135,13 @@ function isCurrentAppState(value: UnknownRecord): value is UnknownRecord & AppSt
     (value.personalPlan !== null && !isRecord(value.personalPlan)) ||
     !isRecord(value.settings)
   ) {
+    return false
+  }
+
+  const readingEvents = value.readingEvents.map(
+    (event) => toReadingEvent(event) as ReadingEvent,
+  )
+  if (!hasValidEventSequence(readingEvents)) {
     return false
   }
 

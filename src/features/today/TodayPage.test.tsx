@@ -20,7 +20,7 @@ describe('TodayPage', () => {
     expect(screen.getByText('창세기 1장')).toBeInTheDocument()
   })
 
-  it('읽은 장 중 정경상 가장 뒤 장의 다음 장을 추천한다', () => {
+  it('같은 시각이면 배열에서 마지막으로 기록된 장의 다음 장을 추천한다', () => {
     render(
       <TodayPage
         events={[
@@ -33,15 +33,15 @@ describe('TodayPage', () => {
       />,
     )
 
-    expect(screen.getByText('창세기 4장')).toBeInTheDocument()
+    expect(screen.getByText('창세기 3장')).toBeInTheDocument()
   })
 
-  it('서로 다른 책에서는 정경상 가장 뒤에 읽은 책을 기준으로 추천한다', () => {
+  it('서로 다른 책에서도 실제로 더 최근에 읽은 장을 기준으로 추천한다', () => {
     render(
       <TodayPage
         events={[
-          event({ id: 'exodus-5', bookId: 'exodus', chapter: 5 }),
-          event({ id: 'genesis-50', chapter: 50 }),
+          event({ id: 'exodus-5', bookId: 'exodus', chapter: 5, occurredAt: '2026-07-31T02:00:00.000Z' }),
+          event({ id: 'genesis-50', chapter: 50, occurredAt: '2026-07-31T01:00:00.000Z' }),
         ]}
         onRead={() => undefined}
         onOpenTracker={() => undefined}
