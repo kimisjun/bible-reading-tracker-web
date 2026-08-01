@@ -150,6 +150,11 @@
   font-weight: 700;
 }
 
+.today-plan__empty {
+  margin: 1rem 0;
+  color: var(--plan-muted);
+}
+
 @media (min-width: 40rem) {
   .today-plan__cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -175,6 +180,21 @@
   }
 }
 
+[data-theme='dark'] .today-plan {
+  --plan-primary: #60a5fa;
+  --plan-primary-strong: #93c5fd;
+  --plan-surface: #1e293b;
+  --plan-surface-soft: #0f172a;
+  --plan-text: #f8fafc;
+  --plan-muted: #cbd5e1;
+  --plan-border: #475569;
+  --plan-success: #4ade80;
+}
+
+[data-theme='dark'] .today-plan__button:not(.today-plan__button--undo) {
+  color: #0f172a;
+}
+
 @media (prefers-color-scheme: dark) {
   .today-plan {
     --plan-primary: #60a5fa;
@@ -195,5 +215,9 @@
 @media (prefers-reduced-motion: reduce) {
   .today-plan__button {
     transition: none;
+  }
+
+  .today-plan__button:active:not(:disabled) {
+    transform: none;
   }
 }

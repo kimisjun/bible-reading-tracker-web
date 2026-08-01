@@ -65,16 +65,17 @@ describe('TodayPlanSection', () => {
     expect(within(commonCard).queryByRole('button', { name: '창세기 1장 읽었어요' })).not.toBeInTheDocument()
 
     await user.click(within(commonCard).getByRole('button', { name: '창세기 2장 읽었어요' }))
-    expect(onRead).toHaveBeenCalledWith('common-1', 'genesis', 2)
+    expect(onRead).toHaveBeenCalledWith('common', 'common-1', 'genesis', 2)
 
     await user.click(within(commonCard).getByRole('button', { name: '1년 성경 일독 미완료 1장 전체 완료' }))
-    expect(onCompleteAll).toHaveBeenCalledWith('common-1', [{ bookId: 'genesis', chapter: 2 }])
+    expect(onCompleteAll).toHaveBeenCalledWith('common', 'common-1', [{ bookId: 'genesis', chapter: 2 }])
   })
 
   it('상태 안내, 완료 축하, 새 종료일을 라이브 영역에 표시한다', () => {
     const completedView: TodayPlanView = {
       ...views[0],
       chapters: [{ ...views[0].chapters[0], completed: true }],
+      justCompleted: true,
       statusMessage: '밀린 분량 3장 포함 · 남은 기간에 다시 나누었습니다',
       lastScheduledDate: '2027-07-31',
     }
@@ -95,6 +96,36 @@ describe('TodayPlanSection', () => {
     expect(screen.getByRole('button', { name: '1년 성경 일독 미완료 0장 전체 완료' })).toBeDisabled()
   })
 
+  it('이전에 완료한 계획은 다시 열었을 때 축하 문구를 반복하지 않는다', () => {
+    render(
+      <TodayPlanSection
+        views={[{
+          ...views[0],
+          chapters: views[0].chapters.map((chapter) => ({ ...chapter, completed: true })),
+          justCompleted: false,
+        }]}
+        onRead={vi.fn()}
+        onCompleteAll={vi.fn()}
+        onUndoBatch={vi.fn()}
+      />,
+    )
+
+    expect(screen.queryByText('오늘도 말씀과 함께 걸으셨습니다')).not.toBeInTheDocument()
+  })
+
+  it('활성 계획에 오늘 배정된 장이 없으면 차분한 안내를 표시한다', () => {
+    render(
+      <TodayPlanSection
+        views={[{ ...views[0], chapters: [] }]}
+        onRead={vi.fn()}
+        onCompleteAll={vi.fn()}
+        onUndoBatch={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByText('오늘 배정된 분량이 없습니다.')).toBeInTheDocument()
+  })
+
   it('최근 전체 완료 묶음을 계획별로 취소한다', async () => {
     const user = userEvent.setup()
     const onUndoBatch = vi.fn()
@@ -108,7 +139,7 @@ describe('TodayPlanSection', () => {
     )
 
     await user.click(screen.getByRole('button', { name: '1년 성경 일독 전체 완료 취소' }))
-    expect(onUndoBatch).toHaveBeenCalledWith('common-1', 'batch-7')
+    expect(onUndoBatch).toHaveBeenCalledWith('common', 'common-1', 'batch-7')
   })
 
   it('계획이 없으면 섹션을 렌더링하지 않는다', () => {
@@ -123,6 +154,7 @@ describe('TodayPlanSection', () => {
     expect(styles).toMatch(/min-height:\s*44px/)
     expect(styles).toMatch(/@media\s*\(max-width:\s*320px\)/)
     expect(styles).toMatch(/@media\s*\(prefers-color-scheme:\s*dark\)/)
+    expect(styles).toMatch(/\[data-theme=['"]dark['"]\]\s+\.today-plan/)
     expect(styles).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)/)
   })
 })
