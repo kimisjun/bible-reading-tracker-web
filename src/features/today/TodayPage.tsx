@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { bibleBooks } from '../../data/bibleBooks'
 import type { ReadingEvent } from '../../domain/reading'
 import { calculateReadingSummary } from '../../domain/readingSummary'
@@ -8,6 +8,7 @@ import './TodayPage.css'
 export type TodayPageProps = Readonly<{
   events: readonly ReadingEvent[]
   now?: Date
+  planContent?: ReactNode
   onRead(bookId: string, chapter: number): void
   onOpenTracker(): void
 }>
@@ -39,7 +40,7 @@ function useKoreaClock(providedNow?: Date) {
   return providedNow ?? new Date()
 }
 
-export function TodayPage({ events, now, onRead, onOpenTracker }: TodayPageProps) {
+export function TodayPage({ events, now, planContent, onRead, onOpenTracker }: TodayPageProps) {
   const currentNow = useKoreaClock(now)
   const recommendation = getTodayRecommendation(events)
   const summary = calculateReadingSummary(events, currentNow)
@@ -70,6 +71,7 @@ export function TodayPage({ events, now, onRead, onOpenTracker }: TodayPageProps
           </button>
         </div>
       </article>
+      {planContent}
       <div className="today-page__summaries">
         <article className="today-page__card today-page__summary-card" aria-labelledby="today-amount-title">
           <h3 id="today-amount-title">오늘 읽은 분량</h3>

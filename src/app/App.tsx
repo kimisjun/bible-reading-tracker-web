@@ -1,6 +1,8 @@
 import { useCallback, useRef, useState, type KeyboardEvent } from 'react'
 import { ProgressPage } from '../features/progress/ProgressPage'
+import { PlanSettingsPage } from '../features/settings/PlanSettingsPage'
 import { TodayPage } from '../features/today/TodayPage'
+import { TodayPlanSection } from '../features/today-plan/TodayPlanSection'
 import { TrackerPage } from '../features/tracker/TrackerPage'
 import { Tutorial } from '../features/tutorial/Tutorial'
 import {
@@ -8,6 +10,8 @@ import {
   markTutorialCompleted,
 } from '../features/tutorial/tutorialStorage'
 import { useReadingState } from './useReadingState'
+import { usePlanState } from './usePlanState'
+import { usePlansIntegration } from './usePlansIntegration'
 
 const pages = {
   today: {
@@ -38,6 +42,16 @@ export function App() {
   const [activePage, setActivePage] = useState<PageId>('today')
   const [showTutorial, setShowTutorial] = useState(() => !hasCompletedTutorial())
   const reading = useReadingState()
+  const plans = usePlanState()
+  const storageError = reading.error ?? plans.error
+  const planIntegration = usePlansIntegration({
+    commonPlan: plans.commonPlan,
+    personalPlan: plans.personalPlan,
+    events: reading.events,
+    read: reading.read,
+    readBatch: reading.readBatch,
+    undoBatch: reading.undoBatch,
+  })
   const pageEntries = Object.entries(pages) as [PageId, (typeof pages)[PageId]][]
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
 
@@ -74,11 +88,11 @@ export function App() {
         <p className="subtitle">성경 66권 1,189장을 차근차근 기록해 보세요.</p>
       </header>
 
-      {reading.error && (
+      {storageError && (
         <div role="alert" className="storage-error" inert={showTutorial || undefined}>
           <strong>저장 데이터를 불러오거나 저장하지 못했습니다.</strong>
           <p>백업을 복원하거나 브라우저 저장소 설정을 확인해 주세요.</p>
-          <small>{reading.error.message}</small>
+          <small>{storageError.message}</small>
         </div>
       )}
 
@@ -96,6 +110,14 @@ export function App() {
                 events={reading.events}
                 onRead={reading.read}
                 onOpenTracker={() => selectTab(1)}
+                planContent={(
+                  <TodayPlanSection
+                    views={planIntegration.views}
+                    onRead={planIntegration.onRead}
+                    onCompleteAll={planIntegration.onCompleteAll}
+                    onUndoBatch={planIntegration.onUndoBatch}
+                  />
+                )}
               />
             )}
             {pageId === 'table' && activePage === 'table' && (
@@ -107,6 +129,12 @@ export function App() {
             {pageId === 'settings' && (
               <div className="settings-placeholder">
                 <h2>설정</h2>
+                <PlanSettingsPage
+                  commonPlan={plans.commonPlan}
+                  personalPlan={plans.personalPlan}
+                  onSavePlan={plans.savePlan}
+                  onRemovePlan={plans.removePlan}
+                />
                 <p>통독 계획과 화면, 데이터 설정을 여기에서 관리할 수 있어요.</p>
                 <button
                   className="settings-tutorial-button"

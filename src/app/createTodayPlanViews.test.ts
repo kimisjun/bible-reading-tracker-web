@@ -75,6 +75,7 @@ describe('createTodayPlanViews', () => {
       personalPlan,
       events: [],
       today: '2026-08-01',
+      justCompletedKeys: new Set([planOwnerKey('common', 'same-id')]),
     })
 
     expect(views).toEqual([
@@ -84,6 +85,7 @@ describe('createTodayPlanViews', () => {
         name: '공통 일독',
         date: '2026-08-01',
         chapters: [{ bookId: 'genesis', chapter: 1, bookName: '창세기', completed: false }],
+        justCompleted: false,
       }),
       expect.objectContaining({
         planId: 'same-id',

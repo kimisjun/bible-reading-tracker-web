@@ -134,23 +134,26 @@ export function createTodayPlanViews({
           : undefined
       const ownerKey = planOwnerKey(plan.request.kind, plan.request.id)
       const recentBatchId = recentActiveBatchId(events, ownerKey)
+      const chapters = recalculated.todayAssignment.map((chapter) => ({
+        ...chapter,
+        bookName: bookNames.get(chapter.bookId) ?? chapter.bookId,
+        completed: (currentCounts.get(chapterKey(chapter)) ?? 0) > 0,
+      }))
 
       return {
         planId: plan.request.id,
         kind: plan.request.kind,
         name: plan.request.name,
         date: today,
-        chapters: recalculated.todayAssignment.map((chapter) => ({
-          ...chapter,
-          bookName: bookNames.get(chapter.bookId) ?? chapter.bookId,
-          completed: (currentCounts.get(chapterKey(chapter)) ?? 0) > 0,
-        })),
+        chapters,
         ...(statusMessage ? { statusMessage } : {}),
         ...(plan.request.missedDayPolicy === 'restart-today' && recalculated.lastScheduledDate
           ? { lastScheduledDate: recalculated.lastScheduledDate }
           : {}),
         ...(recentBatchId ? { recentBatchId } : {}),
-        justCompleted: justCompletedKeys.has(ownerKey),
+        justCompleted: justCompletedKeys.has(ownerKey) &&
+          chapters.length > 0 &&
+          chapters.every((chapter) => chapter.completed),
       }
     })
 }
