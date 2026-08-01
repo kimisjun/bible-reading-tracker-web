@@ -52,6 +52,23 @@ Wave 3A 타입과 동작을 통합한 뒤 시작한다.
 | 오늘 계획 카드 | 공통·개인 계획 동시 표시, 장별/전체 완료 |
 | 계획 통합 | 저장·재계산·오늘 분량을 App에 연결 |
 
+## Wave 3B — 진행 중
+
+통합 기준:
+
+- 브랜치: `feature/wave3b-plan-ui-integration`
+- worktree: `C:\\Users\\User\\Documents\\bible-reading-tracker-web-wave3b`
+- 기준 SHA: `dac55ae`
+
+| 작업 | 후보 커밋/소유 범위 | 상태 |
+|---|---|---|
+| 계획 설정 UI | `95ad169` · `src/features/settings/**` | 독립 검토 중 |
+| 오늘 계획 카드 | `0987e6a` · `src/features/today-plan/**` | 독립 검토 중 |
+| App·저장 통합 | `src/app/**`, 필요한 Today slot | 설계 분석 중 |
+| 검증·리뷰·배포 | 통합자 | 대기 |
+
+통합 순서: 설정 UI → 오늘 계획 카드 → 읽기 batch API → Today view model → App 통합 → 전체 검증 → 독립 리뷰.
+
 ## 통합 규칙
 
 - RED → GREEN 증거
