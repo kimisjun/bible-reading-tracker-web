@@ -49,18 +49,26 @@ export function calculateReadingSummary(
   const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay()
   const weekStartDate = shiftCalendarKey(todayDate, weekday === 0 ? -6 : 1 - weekday)
   const counts = new Map<string, number>()
+  const nowTime = now.getTime()
+  const eligibleEvents = events.flatMap((event) => {
+    const eventDate = new Date(event.occurredAt)
+    const eventTime = eventDate.getTime()
+    return Number.isFinite(eventTime) && eventTime <= nowTime ? [{ event, eventDate }] : []
+  })
   const undoneEventIds = new Set(
-    events.flatMap((event) => (event.undoneEventId === undefined ? [] : [event.undoneEventId])),
+    eligibleEvents.flatMap(({ event }) => (
+      event.undoneEventId === undefined ? [] : [event.undoneEventId]
+    )),
   )
 
-  for (const readingEvent of events) {
+  for (const { event: readingEvent, eventDate } of eligibleEvents) {
     if (
       readingEvent.delta !== 1
       || readingEvent.undoneEventId !== undefined
       || undoneEventIds.has(readingEvent.id)
     ) continue
-    const date = calendarKey(new Date(readingEvent.occurredAt), timeZone)
-    if (date && date <= todayDate) counts.set(date, (counts.get(date) ?? 0) + 1)
+    const date = calendarKey(eventDate, timeZone)
+    if (date) counts.set(date, (counts.get(date) ?? 0) + 1)
   }
 
   const days = labels.map((label, index): DailyReadingAmount => {

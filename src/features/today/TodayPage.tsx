@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { bibleBooks } from '../../data/bibleBooks'
 import type { ReadingEvent } from '../../domain/reading'
 import { calculateReadingSummary } from '../../domain/readingSummary'
@@ -11,9 +12,37 @@ export type TodayPageProps = Readonly<{
   onOpenTracker(): void
 }>
 
-export function TodayPage({ events, now = new Date(), onRead, onOpenTracker }: TodayPageProps) {
+const DAY_IN_MS = 24 * 60 * 60 * 1_000
+const KOREA_OFFSET_IN_MS = 9 * 60 * 60 * 1_000
+
+function millisecondsUntilNextKoreaDay(now: Date) {
+  const nowTime = now.getTime()
+  const nextKoreaMidnight = (
+    Math.floor((nowTime + KOREA_OFFSET_IN_MS) / DAY_IN_MS) + 1
+  ) * DAY_IN_MS - KOREA_OFFSET_IN_MS
+  return Math.max(1, nextKoreaMidnight - nowTime)
+}
+
+function useKoreaClock(providedNow?: Date) {
+  const [dayTick, setDayTick] = useState(0)
+
+  useEffect(() => {
+    if (providedNow !== undefined) return undefined
+    const currentNow = new Date()
+    const timer = window.setTimeout(
+      () => setDayTick((tick) => tick + 1),
+      millisecondsUntilNextKoreaDay(currentNow),
+    )
+    return () => window.clearTimeout(timer)
+  }, [dayTick, providedNow])
+
+  return providedNow ?? new Date()
+}
+
+export function TodayPage({ events, now, onRead, onOpenTracker }: TodayPageProps) {
+  const currentNow = useKoreaClock(now)
   const recommendation = getTodayRecommendation(events)
-  const summary = calculateReadingSummary(events, now)
+  const summary = calculateReadingSummary(events, currentNow)
   const book = bibleBooks.find((candidate) => candidate.id === recommendation.bookId) ?? bibleBooks[0]
   const chapter = recommendation.chapter
 

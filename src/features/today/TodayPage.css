@@ -101,7 +101,7 @@
 
 .today-page__week {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.25rem;
   margin: 1rem 0 0;
   padding: 0;
@@ -149,6 +149,10 @@
   --today-border: #475569;
 }
 
+[data-theme='dark'] .today-page__day-marker {
+  color: #0f172a;
+}
+
 @media (prefers-color-scheme: dark) {
   .today-page {
     --today-background: #0f172a;
@@ -167,6 +171,10 @@
   .today-page__button--secondary {
     color: var(--today-primary-strong);
   }
+
+  .today-page__day-marker {
+    color: #0f172a;
+  }
 }
 
 @media (min-width: 30rem) {
@@ -176,6 +184,10 @@
 
   .today-page__day {
     font-size: 1rem;
+  }
+
+  .today-page__week {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
   }
 }
 

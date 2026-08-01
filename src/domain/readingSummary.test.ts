@@ -119,6 +119,44 @@ describe('calculateReadingSummary', () => {
     expect(summary.days.find(({ label }) => label === '일')?.count).toBe(0)
   })
 
+  it('같은 한국 날짜라도 현재 시각보다 미래인 읽기는 제외한다', () => {
+    const summary = calculateReadingSummary(
+      [event({ occurredAt: '2026-08-01T04:00:00.000Z' })],
+      new Date('2026-08-01T03:00:00.000Z'),
+    )
+
+    expect(summary.todayCount).toBe(0)
+  })
+
+  it('잘못된 시각의 취소 이벤트는 유효한 원본 읽기를 취소하지 않는다', () => {
+    const summary = calculateReadingSummary(
+      [
+        event({ id: 'read', occurredAt: '2026-08-01T02:00:00.000Z' }),
+        event({ id: 'undo', delta: -1, occurredAt: 'not-a-date', undoneEventId: 'read' }),
+      ],
+      new Date('2026-08-01T03:00:00.000Z'),
+    )
+
+    expect(summary.todayCount).toBe(1)
+  })
+
+  it('현재 시각보다 미래인 취소 이벤트는 아직 원본 읽기를 취소하지 않는다', () => {
+    const summary = calculateReadingSummary(
+      [
+        event({ id: 'read', occurredAt: '2026-08-01T02:00:00.000Z' }),
+        event({
+          id: 'future-undo',
+          delta: -1,
+          occurredAt: '2026-08-01T04:00:00.000Z',
+          undoneEventId: 'read',
+        }),
+      ],
+      new Date('2026-08-01T03:00:00.000Z'),
+    )
+
+    expect(summary.todayCount).toBe(1)
+  })
+
   it('입력 이벤트 배열을 변경하지 않는다', () => {
     const events = Object.freeze([
       Object.freeze(event({ id: 'first' })),

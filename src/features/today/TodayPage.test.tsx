@@ -2,7 +2,7 @@
 
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { render, screen } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReadingEvent } from '../../domain/reading'
 import { TodayPage } from './TodayPage'
@@ -19,6 +19,32 @@ const event = (overrides: Partial<ReadingEvent> = {}): ReadingEvent => ({
 })
 
 describe('TodayPage', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('한국 자정이 지나면 오늘 표시와 주간 합계를 자동으로 새 주로 갱신한다', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-08-02T14:59:59.900Z'))
+    render(
+      <TodayPage
+        events={[event({ occurredAt: '2026-08-02T14:00:00.000Z' })]}
+        onRead={() => undefined}
+        onOpenTracker={() => undefined}
+      />,
+    )
+
+    expect(screen.getByRole('listitem', { name: '일 1장 오늘' })).toBeInTheDocument()
+    expect(screen.getByText('이번 주 총 1장')).toBeInTheDocument()
+
+    act(() => {
+      vi.advanceTimersByTime(200)
+    })
+
+    expect(screen.getByRole('listitem', { name: '월 0장 오늘' })).toBeInTheDocument()
+    expect(screen.getByText('이번 주 총 0장')).toBeInTheDocument()
+  })
+
   it('오늘 통독량과 월요일부터 일요일까지의 주간 통독량을 표시한다', () => {
     const events = [
       ...Array.from({ length: 14 }, (_, index) => event({
@@ -214,7 +240,9 @@ describe('TodayPage', () => {
     expect(screen.getByRole('article', { name: '오늘 읽은 분량' })).toHaveClass('today-page__summary-card')
     expect(screen.getByRole('article', { name: '이번 주 통독' })).toHaveClass('today-page__summary-card')
     expect(screen.getByRole('list', { name: '월요일부터 일요일까지 통독량' })).toHaveClass('today-page__week')
-    expect(todayPageCss).toMatch(/grid-template-columns:\s*repeat\(7,\s*minmax\(0,\s*1fr\)\)/)
+    expect(todayPageCss).toMatch(/grid-template-columns:\s*repeat\(4,\s*minmax\(0,\s*1fr\)\)/)
+    expect(todayPageCss).toMatch(/@media\s*\(min-width:[\s\S]*grid-template-columns:\s*repeat\(7,\s*minmax\(0,\s*1fr\)\)/)
+    expect(todayPageCss).toMatch(/\[data-theme='dark'\][\s\S]*today-page__day-marker[\s\S]*color:\s*#0f172a/)
     expect(todayPageCss).toMatch(/min-height:\s*48px/)
     expect(todayPageCss).toMatch(/font-size:\s*1\.125rem/)
     expect(todayPageCss).toMatch(/@media\s*\(min-width:/)
