@@ -73,6 +73,92 @@ describe('useReadingState', () => {
     expect(restored.result.current.events).toHaveLength(1)
   })
 
+  it('계획 전체 완료는 여러 장을 하나의 batch ID와 한 번의 저장으로 기록한다', () => {
+    const storage = new MemoryStorage()
+    const setItem = vi.spyOn(storage, 'setItem')
+    const dependencies = {
+      createId: vi.fn(sequential(['batch-token', 'batch-event-1', 'batch-event-2'])),
+      now: vi.fn(() => '2026-08-01T06:00:00.000Z'),
+    }
+    const { result } = renderHook(() => useReadingState(storage, dependencies))
+
+    act(() => result.current.readBatch('common-plan', [
+      { bookId: 'genesis', chapter: 1 },
+      { bookId: 'genesis', chapter: 2 },
+    ]))
+
+    expect(result.current.events).toEqual([
+      expect.objectContaining({
+        id: 'batch-event-1',
+        bookId: 'genesis',
+        chapter: 1,
+        delta: 1,
+        occurredAt: '2026-08-01T06:00:00.000Z',
+        batchId: 'plan:common-plan:batch-token',
+      }),
+      expect.objectContaining({
+        id: 'batch-event-2',
+        bookId: 'genesis',
+        chapter: 2,
+        delta: 1,
+        occurredAt: '2026-08-01T06:00:00.000Z',
+        batchId: 'plan:common-plan:batch-token',
+      }),
+    ])
+    expect(dependencies.createId).toHaveBeenCalledTimes(3)
+    expect(dependencies.now).toHaveBeenCalledOnce()
+    expect(setItem).toHaveBeenCalledOnce()
+  })
+
+  it('계획 전체 완료는 최신 저장 상태의 완료 장과 중복 입력을 다시 기록하지 않는다', () => {
+    const storage = new MemoryStorage()
+    const dependencies = {
+      createId: sequential(['existing-event', 'batch-token', 'batch-event-2']),
+      now: sequential(['2026-08-01T05:00:00.000Z', '2026-08-01T06:00:00.000Z']),
+    }
+    const { result } = renderHook(() => useReadingState(storage, dependencies))
+    act(() => result.current.read('genesis', 1))
+
+    act(() => result.current.readBatch('common-plan', [
+      { bookId: 'genesis', chapter: 1 },
+      { bookId: 'genesis', chapter: 1 },
+      { bookId: 'genesis', chapter: 2 },
+      { bookId: 'genesis', chapter: 2 },
+    ]))
+
+    expect(result.current.events).toHaveLength(2)
+    expect(result.current.events[1]).toMatchObject({
+      id: 'batch-event-2',
+      bookId: 'genesis',
+      chapter: 2,
+      batchId: 'plan:common-plan:batch-token',
+    })
+  })
+
+  it('계획 전체 완료 대상이 모두 이미 완료됐다면 ID 생성과 저장을 하지 않는다', () => {
+    const storage = new MemoryStorage()
+    const setItem = vi.spyOn(storage, 'setItem')
+    const dependencies = {
+      createId: vi.fn(() => 'existing-event'),
+      now: vi.fn(() => '2026-08-01T05:00:00.000Z'),
+    }
+    const { result } = renderHook(() => useReadingState(storage, dependencies))
+    act(() => result.current.read('genesis', 1))
+    setItem.mockClear()
+    dependencies.createId.mockClear()
+    dependencies.now.mockClear()
+
+    act(() => result.current.readBatch('common-plan', [
+      { bookId: 'genesis', chapter: 1 },
+      { bookId: 'genesis', chapter: 1 },
+    ]))
+
+    expect(result.current.events).toHaveLength(1)
+    expect(dependencies.createId).not.toHaveBeenCalled()
+    expect(dependencies.now).not.toHaveBeenCalled()
+    expect(setItem).not.toHaveBeenCalled()
+  })
+
   it('장별 증가와 감소를 저장하며 0보다 작게 감소시키지 않는다', () => {
     const storage = new MemoryStorage()
     const dependencies = {
@@ -107,6 +193,39 @@ describe('useReadingState', () => {
       delta: -1,
       undoneEventId: 'event-1',
     })
+  })
+
+  it('계획 전체 완료 묶음을 반대 이벤트들로 한 번에 취소한다', () => {
+    const storage = new MemoryStorage()
+    const setItem = vi.spyOn(storage, 'setItem')
+    const dependencies = {
+      createId: sequential(['batch-token', 'batch-event-1', 'batch-event-2', 'undo-prefix']),
+      now: sequential(['2026-08-01T06:00:00.000Z', '2026-08-01T07:00:00.000Z']),
+    }
+    const { result } = renderHook(() => useReadingState(storage, dependencies))
+    act(() => result.current.readBatch('common-plan', [
+      { bookId: 'genesis', chapter: 1 },
+      { bookId: 'genesis', chapter: 2 },
+    ]))
+
+    act(() => result.current.undoBatch('plan:common-plan:batch-token'))
+
+    expect(result.current.events).toHaveLength(4)
+    expect(result.current.events.slice(2)).toEqual([
+      expect.objectContaining({
+        id: 'undo-prefix-1',
+        delta: -1,
+        batchId: 'plan:common-plan:batch-token',
+        undoneEventId: 'batch-event-1',
+      }),
+      expect.objectContaining({
+        id: 'undo-prefix-2',
+        delta: -1,
+        batchId: 'plan:common-plan:batch-token',
+        undoneEventId: 'batch-event-2',
+      }),
+    ])
+    expect(setItem).toHaveBeenCalledTimes(2)
   })
 
   it('초기 저장 데이터 읽기가 실패해도 기본 상태와 복구 가능한 error를 반환한다', () => {

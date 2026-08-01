@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   appendReadingEvent,
+  getReadingCount,
+  undoReadingBatch,
   undoReadingEvent,
   type ReadingEvent,
 } from '../domain/reading'
+import type { ChapterRef } from '../domain/planTypes'
 import {
   APP_STATE_STORAGE_KEY,
   createAppStateRepository,
@@ -20,8 +23,10 @@ export type ReadingState = Readonly<{
   events: readonly ReadingEvent[]
   error: Error | null
   read: (bookId: string, chapter: number) => void
+  readBatch: (planId: string, chapters: readonly ChapterRef[]) => void
   change: (bookId: string, chapter: number, delta: 1 | -1) => void
   undo: (eventId: string) => void
+  undoBatch: (batchId: string) => void
 }>
 
 const browserDependencies: ReadingStateDependencies = {
@@ -92,6 +97,11 @@ export function useReadingState(
         return
       }
       const readingEvents = createEvents(current.readingEvents)
+      if (readingEvents === current.readingEvents) {
+        setAppState(current)
+        setError(null)
+        return
+      }
       const nextState: AppState = { ...current, readingEvents }
       try {
         repository.save(nextState)
@@ -127,6 +137,37 @@ export function useReadingState(
     [change],
   )
 
+  const readBatch = useCallback(
+    (planId: string, chapters: readonly ChapterRef[]) => {
+      persistEvents((current) => {
+        const seen = new Set<string>()
+        const incomplete = chapters.filter((chapter) => {
+          const key = `${chapter.bookId}:${chapter.chapter}`
+          if (seen.has(key) || getReadingCount(current, chapter.bookId, chapter.chapter) > 0) {
+            return false
+          }
+          seen.add(key)
+          return true
+        })
+        if (incomplete.length === 0) return current
+        const batchId = `plan:${planId}:${dependencies.createId()}`
+        const occurredAt = dependencies.now()
+        return incomplete.reduce<readonly ReadingEvent[]>(
+          (events, chapter) => appendReadingEvent(events, {
+            id: dependencies.createId(),
+            bookId: chapter.bookId,
+            chapter: chapter.chapter,
+            delta: 1,
+            occurredAt,
+            batchId,
+          }),
+          current,
+        )
+      })
+    },
+    [dependencies, persistEvents],
+  )
+
   const undo = useCallback(
     (eventId: string) => {
       const undoEventId = dependencies.createId()
@@ -143,11 +184,27 @@ export function useReadingState(
     [dependencies, persistEvents],
   )
 
+  const undoBatch = useCallback(
+    (batchId: string) => {
+      const undoIdPrefix = dependencies.createId()
+      const occurredAt = dependencies.now()
+      persistEvents((current) => undoReadingBatch(
+        current,
+        batchId,
+        undoIdPrefix,
+        occurredAt,
+      ))
+    },
+    [dependencies, persistEvents],
+  )
+
   return {
     events: appState.readingEvents,
     error,
     read,
+    readBatch,
     change,
     undo,
+    undoBatch,
   }
 }
