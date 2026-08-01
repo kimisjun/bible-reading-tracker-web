@@ -15,6 +15,16 @@
 - 최초 실행 3단계 튜토리얼
 - 테스트 15개 파일·101개 테스트 통과
 
+## 계정형 확장 선행 Wave A — 완료·배포
+
+- 한국 시간 기준 오늘 읽은 장 수
+- 월요일~일요일 요일별 통독량과 주간 총합
+- 자정 자동 갱신과 미래·잘못된 취소 이벤트 방어
+- 320px 4열 주간 카드와 다크 배지 대비 개선
+- 독립 리뷰 변경 요청 수정 후 재리뷰 승인
+- 테스트 21개 파일·207개 통과
+- GitHub Pages 배포 실행 `30682289426` 성공
+
 ## Wave 3A — 공통 계약 확정
 
 권위 있는 계약:
@@ -30,7 +40,7 @@
 | 놓친 일정 정책 | `agent/wave3-plan-recalculation` | `src/domain/planRecalculation*` | 통합·검증 완료 |
 | 계획 저장 계층 | `agent/wave3-plan-storage` | `src/storage/**`, `src/app/usePlanState*` | 통합·검증 완료 |
 
-검증: 테스트 20개 파일·188개, lint·build·audit 통과.
+검증: Wave A 통합 기준 테스트 21개 파일·207개, lint·build·audit 통과.
 
 ## Wave 3B — 다음 병렬 개발
 

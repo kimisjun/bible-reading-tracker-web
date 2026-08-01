@@ -17,6 +17,8 @@
 - 오늘 읽을 다음 장 추천
 - `읽었어요` 기록과 새로고침 후 복원
 - 실제 최근 유효 읽기 기준 다음 장 계산
+- 한국 시간 기준 오늘 읽은 장 수와 월요일~일요일 주간 통독량·총합
+- 한국 자정 자동 갱신, 미래·잘못된 시각·취소 이벤트 제외
 - 성경 66권 통독표
 - 정식 이름·약칭 검색과 전체·구약·신약·읽는 중 필터
 - 책 접기·장 그리드·장별 반복 횟수
@@ -48,19 +50,23 @@ npm audit
 
 최근 기준:
 
-- 테스트 파일 15개
-- 테스트 101개 통과
+- 테스트 파일 21개
+- 테스트 207개 통과
 - ESLint 통과
 - TypeScript/Vite 빌드 성공
 - npm audit 취약점 0건
-- GitHub Actions Pages 배포 성공
-- 공개 URL 기록·새로고침 복원 확인
+- GitHub Actions Pages 배포 성공 (`30682289426`, commit `53a0b0f`)
+- 공개 URL에서 오늘·주간 합계 증가와 새로고침 복원 확인
+- 320px 주간 카드 overflow 없음, 다크 배지 대비 7.022:1
 
 ## 핵심 파일
 
 - `src/data/bibleBooks.ts` — 성경 66권 단일 메타데이터 출처
 - `src/domain/reading.ts` — 이벤트 추가·취소·최근 기록
 - `src/domain/progress.ts` — 진행률·월간 활동일
+- `src/domain/readingSummary.ts` — 한국 시간 오늘·주간 읽기 집계
+- `src/domain/plans.ts` — 계획 생성 엔진
+- `src/domain/planRecalculation.ts` — 놓친 일정 정책
 - `src/storage/**` — 버전형 저장·마이그레이션·검증
 - `src/app/useReadingState.ts` — 저장소와 React 상태 연결
 - `src/features/today/**` — 오늘 추천
@@ -71,13 +77,11 @@ npm audit
 
 ## 다음 우선순위
 
-1. 통독 계획 도메인 계약과 테스트
-2. 1년·6개월·90일 계획 생성
-3. 읽는 요일·범위·구약/신약 병행 설정
-4. 놓친 일정 누적·재분배·오늘부터 재계산
-5. 계획 설정 UI와 오늘 계획 분량
-6. JSON 백업·복원·초기화
-7. 서비스 워커·오프라인·Playwright
+1. 계획 설정 UI와 오늘 계획 분량
+2. 공통·개인 계획을 App 저장 계층과 연결
+3. JSON 백업·복원·초기화
+4. 서비스 워커·오프라인·Playwright
+5. 계정형 서버판 기술 스파이크와 초대코드 가입 구현
 
 ## 통합 절차
 
