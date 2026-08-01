@@ -1,16 +1,19 @@
 import { bibleBooks } from '../../data/bibleBooks'
 import type { ReadingEvent } from '../../domain/reading'
+import { calculateReadingSummary } from '../../domain/readingSummary'
 import { getTodayRecommendation } from './recommendation'
 import './TodayPage.css'
 
 export type TodayPageProps = Readonly<{
   events: readonly ReadingEvent[]
+  now?: Date
   onRead(bookId: string, chapter: number): void
   onOpenTracker(): void
 }>
 
-export function TodayPage({ events, onRead, onOpenTracker }: TodayPageProps) {
+export function TodayPage({ events, now = new Date(), onRead, onOpenTracker }: TodayPageProps) {
   const recommendation = getTodayRecommendation(events)
+  const summary = calculateReadingSummary(events, now)
   const book = bibleBooks.find((candidate) => candidate.id === recommendation.bookId) ?? bibleBooks[0]
   const chapter = recommendation.chapter
 
@@ -38,6 +41,35 @@ export function TodayPage({ events, onRead, onOpenTracker }: TodayPageProps) {
           </button>
         </div>
       </article>
+      <div className="today-page__summaries">
+        <article className="today-page__card today-page__summary-card" aria-labelledby="today-amount-title">
+          <h3 id="today-amount-title">오늘 읽은 분량</h3>
+          <p className="today-page__summary-value">오늘 {summary.todayCount}장</p>
+        </article>
+        <article className="today-page__card today-page__summary-card" aria-labelledby="weekly-amount-title">
+          <h3 id="weekly-amount-title">이번 주 통독</h3>
+          <p className="today-page__summary-value">이번 주 총 {summary.weekTotal}장</p>
+          <ul className="today-page__week" aria-label="월요일부터 일요일까지 통독량">
+            {summary.days.map((day) => {
+              const amount = day.isFuture ? '-' : `${day.count}장`
+              const accessibleLabel = `${day.label} ${amount}${day.isToday ? ' 오늘' : ''}`
+
+              return (
+                <li
+                  aria-current={day.isToday ? 'date' : undefined}
+                  aria-label={accessibleLabel}
+                  className="today-page__day"
+                  key={day.date}
+                >
+                  <span className="today-page__day-label">{day.label}</span>
+                  <span className="today-page__day-amount">{amount}</span>
+                  {day.isToday && <span className="today-page__day-marker">오늘</span>}
+                </li>
+              )
+            })}
+          </ul>
+        </article>
+      </div>
     </section>
   )
 }

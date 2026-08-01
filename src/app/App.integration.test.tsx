@@ -9,6 +9,19 @@ describe('App reading journey', () => {
     window.localStorage.setItem(TUTORIAL_STORAGE_KEY, 'completed')
   })
 
+  it('오늘 읽기를 기록하면 오늘과 이번 주 통독량이 즉시 증가한다', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    expect(screen.getByText('오늘 0장')).toBeInTheDocument()
+    expect(screen.getByText('이번 주 총 0장')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '읽었어요' }))
+
+    expect(screen.getByText('오늘 1장')).toBeInTheDocument()
+    expect(screen.getByText('이번 주 총 1장')).toBeInTheDocument()
+  })
+
   it('오늘 읽기를 기록하고 다시 열면 다음 장을 추천한다', async () => {
     const user = userEvent.setup()
     const firstVisit = render(<App />)

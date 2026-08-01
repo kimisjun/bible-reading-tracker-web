@@ -1,7 +1,13 @@
+/// <reference types="node" />
+
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReadingEvent } from '../../domain/reading'
 import { TodayPage } from './TodayPage'
+
+const todayPageCss = readFileSync(resolve(process.cwd(), 'src/features/today/TodayPage.css'), 'utf8')
 
 const event = (overrides: Partial<ReadingEvent> = {}): ReadingEvent => ({
   id: 'event-1',
@@ -13,6 +19,54 @@ const event = (overrides: Partial<ReadingEvent> = {}): ReadingEvent => ({
 })
 
 describe('TodayPage', () => {
+  it('오늘 통독량과 월요일부터 일요일까지의 주간 통독량을 표시한다', () => {
+    const events = [
+      ...Array.from({ length: 14 }, (_, index) => event({
+        id: `monday-${index}`,
+        occurredAt: '2026-07-27T01:00:00.000Z',
+      })),
+      ...Array.from({ length: 4 }, (_, index) => event({
+        id: `today-${index}`,
+        occurredAt: '2026-08-01T01:00:00.000Z',
+      })),
+    ]
+
+    render(
+      <TodayPage
+        events={events}
+        now={new Date('2026-08-01T03:00:00.000Z')}
+        onRead={() => undefined}
+        onOpenTracker={() => undefined}
+      />,
+    )
+
+    expect(screen.getByRole('heading', { name: '오늘 읽은 분량' })).toBeInTheDocument()
+    expect(screen.getByText('오늘 4장')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '이번 주 통독' })).toBeInTheDocument()
+    expect(screen.getByText('이번 주 총 18장')).toBeInTheDocument()
+    expect(screen.getAllByRole('listitem')).toHaveLength(7)
+    expect(screen.getByRole('listitem', { name: '월 14장' })).toBeInTheDocument()
+    expect(screen.getByRole('listitem', { name: '토 4장 오늘' })).toBeInTheDocument()
+  })
+
+  it('지난 무기록 요일은 0장, 미래 요일은 빼기로 표시하고 오늘을 텍스트로 알린다', () => {
+    render(
+      <TodayPage
+        events={[]}
+        now={new Date('2026-07-29T03:00:00.000Z')}
+        onRead={() => undefined}
+        onOpenTracker={() => undefined}
+      />,
+    )
+
+    expect(screen.getByRole('listitem', { name: '월 0장' })).toBeInTheDocument()
+    const todayItem = screen.getByRole('listitem', { name: '수 0장 오늘' })
+    expect(todayItem).toHaveAttribute('aria-current', 'date')
+    expect(todayItem?.querySelectorAll('span')).toHaveLength(3)
+    expect(screen.getByRole('listitem', { name: '목 -' })).toBeInTheDocument()
+    expect(screen.getByRole('listitem', { name: '일 -' })).toBeInTheDocument()
+  })
+
   it('기록이 없으면 창세기 1장을 추천한다', () => {
     render(<TodayPage events={[]} onRead={() => undefined} onOpenTracker={() => undefined} />)
 
@@ -145,5 +199,24 @@ describe('TodayPage', () => {
     expect(screen.getByRole('button', { name: '전체 통독표에서 선택' })).toHaveClass(
       'today-page__button',
     )
+  })
+
+  it('요약을 접근 가능한 카드와 모바일 우선 스타일 훅으로 제공한다', () => {
+    render(
+      <TodayPage
+        events={[]}
+        now={new Date('2026-08-01T03:00:00.000Z')}
+        onRead={() => undefined}
+        onOpenTracker={() => undefined}
+      />,
+    )
+
+    expect(screen.getByRole('article', { name: '오늘 읽은 분량' })).toHaveClass('today-page__summary-card')
+    expect(screen.getByRole('article', { name: '이번 주 통독' })).toHaveClass('today-page__summary-card')
+    expect(screen.getByRole('list', { name: '월요일부터 일요일까지 통독량' })).toHaveClass('today-page__week')
+    expect(todayPageCss).toMatch(/grid-template-columns:\s*repeat\(7,\s*minmax\(0,\s*1fr\)\)/)
+    expect(todayPageCss).toMatch(/min-height:\s*48px/)
+    expect(todayPageCss).toMatch(/font-size:\s*1\.125rem/)
+    expect(todayPageCss).toMatch(/@media\s*\(min-width:/)
   })
 })
