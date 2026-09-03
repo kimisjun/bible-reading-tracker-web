@@ -119,6 +119,35 @@ export function createTodayPlanViews({
   return [commonPlan, personalPlan]
     .filter((plan): plan is ReadingPlan => plan !== null)
     .map((plan) => {
+      const ownerKey = planOwnerKey(plan.request.kind, plan.request.id)
+      const recentBatchId = recentActiveBatchId(events, ownerKey)
+
+      if (today < plan.request.startDate) {
+        return {
+          planId: plan.request.id,
+          kind: plan.request.kind,
+          name: plan.request.name,
+          date: today,
+          chapters: [],
+          statusMessage: '계획 시작 전입니다',
+          ...(recentBatchId ? { recentBatchId } : {}),
+          justCompleted: false,
+        }
+      }
+
+      if (today > plan.request.endDate) {
+        return {
+          planId: plan.request.id,
+          kind: plan.request.kind,
+          name: plan.request.name,
+          date: today,
+          chapters: [],
+          statusMessage: '계획 기간이 종료되었습니다',
+          ...(recentBatchId ? { recentBatchId } : {}),
+          justCompleted: false,
+        }
+      }
+
       const recalculated = recalculatePlan({
         plan,
         today,
@@ -132,8 +161,6 @@ export function createTodayPlanViews({
         : plan.request.missedDayPolicy === 'redistribute'
           ? '남은 기간에 다시 나누었습니다'
           : undefined
-      const ownerKey = planOwnerKey(plan.request.kind, plan.request.id)
-      const recentBatchId = recentActiveBatchId(events, ownerKey)
       const chapters = recalculated.todayAssignment.map((chapter) => ({
         ...chapter,
         bookName: bookNames.get(chapter.bookId) ?? chapter.bookId,

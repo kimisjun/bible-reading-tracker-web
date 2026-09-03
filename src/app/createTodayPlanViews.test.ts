@@ -133,6 +133,64 @@ describe('createTodayPlanViews', () => {
     expect(view.justCompleted).toBe(false)
   })
 
+  it.each<MissedDayPolicy>(['carry', 'redistribute', 'restart-today'])(
+    '시작 전 %s 계획은 오늘 분량을 조기 배정하지 않는다',
+    (policy) => {
+      const futurePlan = plan({
+        id: 'future-plan',
+        kind: 'common',
+        name: '미래 계획',
+        policy,
+        schedule: [
+          { date: '2026-08-03', chapters: [{ bookId: 'genesis', chapter: 1 }] },
+          { date: '2026-08-04', chapters: [{ bookId: 'genesis', chapter: 2 }] },
+        ],
+      })
+
+      const [view] = createTodayPlanViews({
+        commonPlan: futurePlan,
+        personalPlan: null,
+        events: [],
+        today: '2026-08-01',
+      })
+
+      expect(view.chapters).toEqual([])
+      expect(view.statusMessage).toBe('계획 시작 전입니다')
+    },
+  )
+
+  it.each<MissedDayPolicy>(['carry', 'redistribute', 'restart-today'])(
+    '종료 후 미완료 %s 계획은 예외 없이 종료 상태를 표시한다',
+    (policy) => {
+      const expiredPlan = plan({
+        id: 'expired-plan',
+        kind: 'personal',
+        name: '종료된 계획',
+        policy,
+        schedule: [
+          { date: '2026-08-01', chapters: [{ bookId: 'genesis', chapter: 1 }] },
+          { date: '2026-08-02', chapters: [{ bookId: 'genesis', chapter: 2 }] },
+        ],
+      })
+
+      expect(() => createTodayPlanViews({
+        commonPlan: null,
+        personalPlan: expiredPlan,
+        events: [],
+        today: '2026-08-03',
+      })).not.toThrow()
+
+      const [view] = createTodayPlanViews({
+        commonPlan: null,
+        personalPlan: expiredPlan,
+        events: [],
+        today: '2026-08-03',
+      })
+      expect(view.chapters).toEqual([])
+      expect(view.statusMessage).toBe('계획 기간이 종료되었습니다')
+    },
+  )
+
   it('kind와 encoded plan ID로 최근 활성 batch를 계획별로 복원한다', () => {
     const commonPlan = plan({
       id: 'same:id',
