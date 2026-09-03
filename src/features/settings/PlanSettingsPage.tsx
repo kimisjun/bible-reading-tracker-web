@@ -71,8 +71,8 @@ function previewError(error: unknown, kind: PlanKind): PreviewResult {
   if (message.includes('계획 이름')) fieldId = 'personal-name'
   else if (message.includes('책')) fieldId = 'personal-books'
   else if (message.includes('요일')) fieldId = `${kind}-weekdays`
-  else if (message.includes('시작일')) fieldId = `${kind}-start`
   else if (message.includes('종료일')) fieldId = `${kind}-end`
+  else if (message.includes('시작일')) fieldId = `${kind}-start`
   return { error: message, fieldId }
 }
 

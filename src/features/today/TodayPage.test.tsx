@@ -216,6 +216,27 @@ describe('TodayPage', () => {
     expect(onOpenTracker).toHaveBeenCalledOnce()
   })
 
+  it('추천 장을 바이블 애플 새 탭에서 안전하게 열고 기존 동작과 함께 제공한다', () => {
+    render(
+      <TodayPage
+        events={[event({ id: 'exodus-5', bookId: 'exodus', chapter: 5 })]}
+        onRead={() => undefined}
+        onOpenTracker={() => undefined}
+      />,
+    )
+
+    const link = screen.getByRole('link', { name: '바이블 애플에서 출애굽기 6장 읽기 (새 창)' })
+    expect(link).toHaveAttribute(
+      'href',
+      'https://goodtvbible.goodtv.co.kr/onbibleread/0/2/6',
+    )
+    expect(link).toHaveAttribute('target', '_blank')
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+    expect(link).toHaveClass('today-page__button')
+    expect(screen.getByRole('button', { name: '읽었어요' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '전체 통독표에서 선택' })).toBeInTheDocument()
+  })
+
   it('추천을 모바일 카드와 최소 터치 영역을 위한 스타일 훅으로 제공한다', () => {
     render(<TodayPage events={[]} onRead={() => undefined} onOpenTracker={() => undefined} />)
 

@@ -2,11 +2,24 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { TUTORIAL_STORAGE_KEY } from '../features/tutorial/tutorialStorage'
 import { App } from './App'
+import { combineStorageErrors } from './storageErrors'
 
 describe('App', () => {
   beforeEach(() => {
     window.localStorage.clear()
     window.localStorage.setItem(TUTORIAL_STORAGE_KEY, 'completed')
+  })
+
+  it('읽기와 계획 저장 오류를 모두 보존하고 같은 메시지는 중복하지 않는다', () => {
+    expect(combineStorageErrors(
+      new Error('읽기 저장 실패'),
+      new Error('계획 저장 실패'),
+    )).toEqual(['읽기 저장 실패', '계획 저장 실패'])
+
+    expect(combineStorageErrors(
+      new Error('같은 저장 실패'),
+      new Error('같은 저장 실패'),
+    )).toEqual(['같은 저장 실패'])
   })
 
   it('저장 데이터를 불러오지 못하면 자동 초기화하지 않고 복구 안내를 alert로 보여준다', () => {

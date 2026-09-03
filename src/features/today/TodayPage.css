@@ -49,12 +49,18 @@
 }
 
 .today-page__button {
+  display: flex;
   min-height: 44px;
+  align-items: center;
+  justify-content: center;
   padding: 0.75rem 1rem;
   border: 2px solid var(--today-primary);
   border-radius: 0.75rem;
   font: inherit;
   font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  text-decoration: none;
   cursor: pointer;
 }
 
@@ -70,6 +76,11 @@
 .today-page__button--secondary {
   color: var(--today-primary-strong);
   background: transparent;
+}
+
+.today-page__button--external {
+  color: var(--today-primary-strong);
+  background: var(--today-surface);
 }
 
 .today-page__button:focus-visible {
@@ -179,7 +190,7 @@
 
 @media (min-width: 30rem) {
   .today-page__actions {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .today-page__day {

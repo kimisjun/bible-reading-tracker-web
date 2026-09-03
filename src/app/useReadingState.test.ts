@@ -159,6 +159,39 @@ describe('useReadingState', () => {
     expect(setItem).not.toHaveBeenCalled()
   })
 
+  it('빈 계획 소유자는 batch를 저장하지 않고 복구 가능한 오류로 노출한다', () => {
+    const storage = new MemoryStorage()
+    const setItem = vi.spyOn(storage, 'setItem')
+    const { result } = renderHook(() => useReadingState(storage, {
+      createId: () => 'id-1',
+      now: () => '2026-08-01T05:00:00.000Z',
+    }))
+
+    expect(() => act(() => result.current.readBatch('', [
+      { bookId: 'genesis', chapter: 1 },
+    ]))).not.toThrow()
+
+    expect(result.current.events).toEqual([])
+    expect(result.current.error).toHaveProperty('message', '계획 소유자 ID가 필요합니다.')
+    expect(setItem).not.toHaveBeenCalled()
+  })
+
+  it('malformed batch 장 정보는 예외를 전파하지 않고 저장 오류로 노출한다', () => {
+    const storage = new MemoryStorage()
+    const setItem = vi.spyOn(storage, 'setItem')
+    const { result } = renderHook(() => useReadingState(storage, {
+      createId: () => 'id-1',
+      now: () => '2026-08-01T05:00:00.000Z',
+    }))
+    const malformed = [null] as unknown as readonly { bookId: string; chapter: number }[]
+
+    expect(() => act(() => result.current.readBatch('common-plan', malformed))).not.toThrow()
+
+    expect(result.current.events).toEqual([])
+    expect(result.current.error).toHaveProperty('message', '계획 완료 장 정보가 올바르지 않습니다.')
+    expect(setItem).not.toHaveBeenCalled()
+  })
+
   it('장별 증가와 감소를 저장하며 0보다 작게 감소시키지 않는다', () => {
     const storage = new MemoryStorage()
     const dependencies = {
@@ -251,8 +284,10 @@ describe('useReadingState', () => {
     const durableBytes = storage.getItem(APP_STATE_STORAGE_KEY)
     storage.failSave = true
 
-    act(() => result.current.read('genesis', 2))
+    let saved: boolean | undefined
+    act(() => { saved = result.current.read('genesis', 2) })
 
+    expect(saved).toBe(false)
     expect(result.current.events.map(({ id }) => id)).toEqual(['saved-event'])
     expect(storage.getItem(APP_STATE_STORAGE_KEY)).toBe(durableBytes)
     expect(result.current.error).toMatchObject({ name: 'QuotaExceededError' })

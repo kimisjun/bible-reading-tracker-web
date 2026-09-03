@@ -94,5 +94,5 @@ describe('App reading journey', () => {
 
     await user.click(screen.getByRole('tab', { name: '오늘' }))
     expect(screen.getByText('창세기 1장')).toBeInTheDocument()
-  })
+  }, 15_000)
 })

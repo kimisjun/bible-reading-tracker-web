@@ -8,9 +8,9 @@ export type UsePlansIntegrationInput = Readonly<{
   commonPlan: ReadingPlan | null
   personalPlan: ReadingPlan | null
   events: readonly ReadingEvent[]
-  read: (bookId: string, chapter: number) => void
-  readBatch: (planOwner: string, chapters: readonly ChapterRef[]) => void
-  undoBatch: (batchId: string) => void
+  read: (bookId: string, chapter: number) => boolean
+  readBatch: (planOwner: string, chapters: readonly ChapterRef[]) => boolean
+  undoBatch: (batchId: string) => boolean
   today?: string
 }>
 
@@ -89,13 +89,13 @@ export function usePlansIntegration({
       candidate.kind === kind && candidate.planId === planId)
     const incomplete = view?.chapters.filter((candidate) => !candidate.completed) ?? []
     const completesPlanDay = incomplete.length === 1 && sameChapter(incomplete[0], bookId, chapter)
+    if (!read(bookId, chapter)) return
     setJustCompletedKeys((current) => {
       const next = new Set(current)
       next.delete(ownerKey)
       if (completesPlanDay) next.add(ownerKey)
       return next
     })
-    read(bookId, chapter)
   }, [read, views])
 
   const onCompleteAll = useCallback((
@@ -105,8 +105,8 @@ export function usePlansIntegration({
   ) => {
     if (incomplete.length === 0) return
     const ownerKey = planOwnerKey(kind, planId)
+    if (!readBatch(ownerKey, incomplete)) return
     setJustCompletedKeys((current) => new Set(current).add(ownerKey))
-    readBatch(ownerKey, incomplete)
   }, [readBatch])
 
   const onUndoBatch = useCallback((
@@ -115,12 +115,12 @@ export function usePlansIntegration({
     batchId: string,
   ) => {
     const ownerKey = planOwnerKey(kind, planId)
+    if (!undoBatch(batchId)) return
     setJustCompletedKeys((current) => {
       const next = new Set(current)
       next.delete(ownerKey)
       return next
     })
-    undoBatch(batchId)
   }, [undoBatch])
 
   return { today, views, onRead, onCompleteAll, onUndoBatch }

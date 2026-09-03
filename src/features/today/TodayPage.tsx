@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { bibleBooks } from '../../data/bibleBooks'
 import type { ReadingEvent } from '../../domain/reading'
 import { calculateReadingSummary } from '../../domain/readingSummary'
+import { getBibleAppleChapterUrl } from './bibleApple'
 import { getTodayRecommendation } from './recommendation'
 import './TodayPage.css'
 
@@ -46,6 +47,7 @@ export function TodayPage({ events, now, planContent, onRead, onOpenTracker }: T
   const summary = calculateReadingSummary(events, currentNow)
   const book = bibleBooks.find((candidate) => candidate.id === recommendation.bookId) ?? bibleBooks[0]
   const chapter = recommendation.chapter
+  const bibleAppleUrl = getBibleAppleChapterUrl(book.id, chapter)
 
   return (
     <section className="today-page" aria-labelledby="today-page-title">
@@ -69,6 +71,17 @@ export function TodayPage({ events, now, planContent, onRead, onOpenTracker }: T
           >
             전체 통독표에서 선택
           </button>
+          {bibleAppleUrl !== null && (
+            <a
+              aria-label={`바이블 애플에서 ${book.name} ${chapter}장 읽기 (새 창)`}
+              className="today-page__button today-page__button--external"
+              href={bibleAppleUrl}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              바이블 애플에서 읽기 ↗
+            </a>
+          )}
         </div>
       </article>
       {planContent}

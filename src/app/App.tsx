@@ -12,6 +12,7 @@ import {
 import { useReadingState } from './useReadingState'
 import { usePlanState } from './usePlanState'
 import { usePlansIntegration } from './usePlansIntegration'
+import { combineStorageErrors } from './storageErrors'
 
 const pages = {
   today: {
@@ -43,7 +44,7 @@ export function App() {
   const [showTutorial, setShowTutorial] = useState(() => !hasCompletedTutorial())
   const reading = useReadingState()
   const plans = usePlanState()
-  const storageError = reading.error ?? plans.error
+  const storageErrors = combineStorageErrors(reading.error, plans.error)
   const planIntegration = usePlansIntegration({
     commonPlan: plans.commonPlan,
     personalPlan: plans.personalPlan,
@@ -88,11 +89,13 @@ export function App() {
         <p className="subtitle">성경 66권 1,189장을 차근차근 기록해 보세요.</p>
       </header>
 
-      {storageError && (
+      {storageErrors.length > 0 && (
         <div role="alert" className="storage-error" inert={showTutorial || undefined}>
           <strong>저장 데이터를 불러오거나 저장하지 못했습니다.</strong>
           <p>백업을 복원하거나 브라우저 저장소 설정을 확인해 주세요.</p>
-          <small>{storageError.message}</small>
+          <ul>
+            {storageErrors.map((message) => <li key={message}><small>{message}</small></li>)}
+          </ul>
         </div>
       )}
 

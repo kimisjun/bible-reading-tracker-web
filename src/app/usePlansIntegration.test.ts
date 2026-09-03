@@ -33,9 +33,9 @@ function readEvent(overrides: Partial<ReadingEvent> = {}): ReadingEvent {
 
 describe('usePlansIntegration', () => {
   it('마지막 장을 개별 완료하면 현재 세션에서만 축하하고 읽기 이벤트를 연결한다', () => {
-    const read = vi.fn()
-    const readBatch = vi.fn()
-    const undoBatch = vi.fn()
+    const read = vi.fn(() => true)
+    const readBatch = vi.fn(() => true)
+    const undoBatch = vi.fn(() => true)
     const initialProps = { events: [] as readonly ReadingEvent[] }
     const { result, rerender, unmount } = renderHook(
       ({ events }) => usePlansIntegration({
@@ -71,10 +71,32 @@ describe('usePlansIntegration', () => {
     expect(reopened.result.current.views[0].justCompleted).toBe(false)
   })
 
+  it('실패한 계획 읽기 intent는 이후 외부 완료에서 축하로 되살아나지 않는다', () => {
+    const read = vi.fn(() => false)
+    const { result, rerender } = renderHook(
+      ({ events }) => usePlansIntegration({
+        commonPlan,
+        personalPlan: null,
+        events,
+        read,
+        readBatch: vi.fn(() => false),
+        undoBatch: vi.fn(() => false),
+        today: '2026-08-01',
+      }),
+      { initialProps: { events: [] as readonly ReadingEvent[] } },
+    )
+
+    act(() => result.current.onRead('common', 'common-1', 'genesis', 1))
+    rerender({ events: [readEvent({ id: 'other-tab-read' })] })
+
+    expect(result.current.views[0].chapters[0].completed).toBe(true)
+    expect(result.current.views[0].justCompleted).toBe(false)
+  })
+
   it('전체 완료와 최근 batch 취소를 encoded 계획 소유권으로 연결한다', () => {
-    const read = vi.fn()
-    const readBatch = vi.fn()
-    const undoBatch = vi.fn()
+    const read = vi.fn(() => true)
+    const readBatch = vi.fn(() => true)
+    const undoBatch = vi.fn(() => true)
     const { result, rerender } = renderHook(
       ({ events }) => usePlansIntegration({
         commonPlan,

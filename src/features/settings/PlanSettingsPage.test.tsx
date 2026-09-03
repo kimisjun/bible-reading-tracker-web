@@ -266,6 +266,15 @@ describe('PlanSettingsPage', () => {
     expect(endDate).toHaveAttribute('aria-invalid', 'true')
     expect(endDate).toHaveAttribute('aria-describedby', 'personal-end-error')
     expect(within(personal).getByText(/종료일이 유효한/, { selector: '#personal-end-error' })).toBeInTheDocument()
+
+    await user.type(endDate, '2026-07-31')
+    const startDate = within(personal).getByLabelText('시작일')
+    expect(startDate).not.toHaveAttribute('aria-invalid')
+    expect(endDate).toHaveAttribute('aria-invalid', 'true')
+    expect(endDate).toHaveAttribute('aria-describedby', 'personal-end-error')
+    expect(within(personal).getByText('종료일은 시작일보다 빠를 수 없습니다.', {
+      selector: '#personal-end-error',
+    })).toBeInTheDocument()
   })
 
   it('현재 계획 요약을 표시하고 삭제 콜백을 종류별로 호출한다', async () => {
