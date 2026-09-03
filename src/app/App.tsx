@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState, type KeyboardEvent } from 'react'
+import { filterReadingEventsForKoreaYear } from '../domain/readingYear'
 import { ProgressPage } from '../features/progress/ProgressPage'
 import { PlanSettingsPage } from '../features/settings/PlanSettingsPage'
 import { TodayPage } from '../features/today/TodayPage'
@@ -9,6 +10,7 @@ import {
   hasCompletedTutorial,
   markTutorialCompleted,
 } from '../features/tutorial/tutorialStorage'
+import { useKoreaClock } from './useKoreaClock'
 import { useReadingState } from './useReadingState'
 import { usePlanState } from './usePlanState'
 import { usePlansIntegration } from './usePlansIntegration'
@@ -42,7 +44,9 @@ type PageId = keyof typeof pages
 export function App() {
   const [activePage, setActivePage] = useState<PageId>('today')
   const [showTutorial, setShowTutorial] = useState(() => !hasCompletedTutorial())
+  const currentNow = useKoreaClock()
   const reading = useReadingState()
+  const currentYearEvents = filterReadingEventsForKoreaYear(reading.events, currentNow)
   const plans = usePlanState()
   const storageErrors = combineStorageErrors(reading.error, plans.error)
   const planIntegration = usePlansIntegration({
@@ -110,7 +114,8 @@ export function App() {
           >
             {pageId === 'today' && (
               <TodayPage
-                events={reading.events}
+                events={currentYearEvents}
+                now={currentNow}
                 onRead={reading.read}
                 onOpenTracker={() => selectTab(1)}
                 planContent={(
@@ -124,10 +129,10 @@ export function App() {
               />
             )}
             {pageId === 'table' && activePage === 'table' && (
-              <TrackerPage events={reading.events} onChange={reading.change} />
+              <TrackerPage events={currentYearEvents} onChange={reading.change} />
             )}
             {pageId === 'progress' && (
-              <ProgressPage events={reading.events} onUndo={reading.undo} />
+              <ProgressPage events={currentYearEvents} onUndo={reading.undo} />
             )}
             {pageId === 'settings' && (
               <div className="settings-placeholder">

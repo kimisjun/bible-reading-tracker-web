@@ -11,6 +11,8 @@ export type ReadingProgress = Readonly<{
   overall: ProgressSection
   oldTestament: ProgressSection
   newTestament: ProgressSection
+  /** 성경의 모든 장을 각각 읽은 활성 횟수 중 최솟값이다. */
+  completedBibleReadings: number
   /** 장별 이벤트 합계가 양수인 읽기만 합산하며 고아 취소로 인한 음수는 0으로 취급한다. */
   totalReadings: number
 }>
@@ -36,6 +38,12 @@ export function calculateReadingProgress(events: readonly ReadingEvent[]): Readi
     .map(([chapterKey]) => chapterKey)
   const completedChapters = completedChapterKeys.length
   const totalChapters = bibleBooks.reduce((total, book) => total + book.chapters, 0)
+  const activeChapterCounts = bibleBooks.flatMap((book) =>
+    Array.from({ length: book.chapters }, (_, index) =>
+      Math.max(countsByChapter.get(`${book.id}:${index + 1}`) ?? 0, 0),
+    ),
+  )
+  const completedBibleReadings = Math.min(...activeChapterCounts)
   const oldBooks = bibleBooks.filter((book) => book.testament === 'old')
   const oldBookIds = new Set(oldBooks.map((book) => book.id))
   const oldCompletedChapters = completedChapterKeys.filter((key) => oldBookIds.has(key.split(':')[0])).length
@@ -59,10 +67,8 @@ export function calculateReadingProgress(events: readonly ReadingEvent[]): Readi
       totalChapters: newTotalChapters,
       percent: (newCompletedChapters / newTotalChapters) * 100,
     },
-    totalReadings: [...countsByChapter.values()].reduce(
-      (total, count) => total + Math.max(count, 0),
-      0,
-    ),
+    completedBibleReadings,
+    totalReadings: activeChapterCounts.reduce((total, count) => total + count, 0),
   }
 }
 

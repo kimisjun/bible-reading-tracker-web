@@ -1,12 +1,83 @@
-import { render, screen, within } from '@testing-library/react'
+import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { ReadingEvent } from '../domain/reading'
 import { TUTORIAL_STORAGE_KEY } from '../features/tutorial/tutorialStorage'
+import { APP_STATE_STORAGE_KEY } from '../storage/repository'
 import { App } from './App'
+
+function saveReadingEvents(readingEvents: readonly ReadingEvent[]) {
+  window.localStorage.setItem(APP_STATE_STORAGE_KEY, JSON.stringify({
+    schemaVersion: 1,
+    readingEvents,
+    commonPlan: null,
+    personalPlan: null,
+    settings: { theme: 'light', readerName: '', reminder: null },
+  }))
+}
 
 describe('App reading journey', () => {
   beforeEach(() => {
     window.localStorage.clear()
     window.localStorage.setItem(TUTORIAL_STORAGE_KEY, 'completed')
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('새해에는 이전 연도 기록을 보존하면서 통독표와 진행률을 0에서 시작한다', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-12-31T15:00:00.000Z'))
+    saveReadingEvents([{
+      id: 'previous-year-read',
+      bookId: 'genesis',
+      chapter: 1,
+      delta: 1,
+      occurredAt: '2026-12-31T14:59:59.999Z',
+    }])
+
+    render(<App />)
+
+    expect(screen.getByText('창세기 1장')).toBeInTheDocument()
+    expect(screen.getByText('오늘 0장')).toBeInTheDocument()
+
+    act(() => {
+      screen.getByRole('tab', { name: '통독표' }).click()
+    })
+    expect(screen.getByRole('button', { name: '창세기, 0/50장, 펼치기' })).toBeInTheDocument()
+
+    act(() => {
+      screen.getByRole('tab', { name: '진행' }).click()
+    })
+    expect(screen.getByText('0 / 1,189장')).toBeInTheDocument()
+    expect(screen.getByText('최근 읽기 기록이 없어요.')).toBeInTheDocument()
+
+    const persisted = JSON.parse(window.localStorage.getItem(APP_STATE_STORAGE_KEY) ?? '{}')
+    expect(persisted.readingEvents).toHaveLength(1)
+    expect(persisted.readingEvents[0].id).toBe('previous-year-read')
+  })
+
+  it('앱을 켜 둔 채 한국 새해 자정이 지나도 자동으로 0에서 시작한다', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-12-31T14:59:59.900Z'))
+    saveReadingEvents([{
+      id: 'last-day-read',
+      bookId: 'genesis',
+      chapter: 1,
+      delta: 1,
+      occurredAt: '2026-12-31T14:00:00.000Z',
+    }])
+
+    render(<App />)
+    expect(screen.getByText('창세기 2장')).toBeInTheDocument()
+    expect(screen.getByText('오늘 1장')).toBeInTheDocument()
+
+    act(() => {
+      vi.advanceTimersByTime(200)
+    })
+
+    expect(screen.getByText('창세기 1장')).toBeInTheDocument()
+    expect(screen.getByText('오늘 0장')).toBeInTheDocument()
   })
 
   it('설정에서 공통 계획을 저장하고 앱을 다시 열어도 복원한다', async () => {

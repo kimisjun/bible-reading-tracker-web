@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { bibleBooks } from '../../data/bibleBooks'
 import type { ReadingEvent } from '../../domain/reading'
 import { TodayPage } from './TodayPage'
 
@@ -17,6 +18,19 @@ const event = (overrides: Partial<ReadingEvent> = {}): ReadingEvent => ({
   occurredAt: '2026-07-31T01:00:00.000Z',
   ...overrides,
 })
+
+function completedBibleEvents(cycles: number): ReadingEvent[] {
+  return Array.from({ length: cycles }, (_, cycle) =>
+    bibleBooks.flatMap((book) =>
+      Array.from({ length: book.chapters }, (_, index) => event({
+        id: `cycle-${cycle + 1}-${book.id}-${index + 1}`,
+        bookId: book.id,
+        chapter: index + 1,
+        occurredAt: '2026-07-30T01:00:00.000Z',
+      })),
+    ),
+  ).flat()
+}
 
 describe('TodayPage', () => {
   afterEach(() => {
@@ -73,6 +87,28 @@ describe('TodayPage', () => {
     expect(screen.getAllByRole('listitem')).toHaveLength(7)
     expect(screen.getByRole('listitem', { name: '월 14장' })).toBeInTheDocument()
     expect(screen.getByRole('listitem', { name: '토 4장 오늘' })).toBeInTheDocument()
+  })
+
+  it.each([
+    { cycles: 1, expected: '1독 후 오늘 3장' },
+    { cycles: 2, expected: '2독 후 오늘 3장' },
+  ])('$cycles독을 마친 뒤 오늘 분량에 완독 횟수를 함께 표시한다', ({ cycles, expected }) => {
+    const todayEvents = Array.from({ length: 3 }, (_, index) => event({
+      id: `today-after-${cycles}-cycles-${index + 1}`,
+      chapter: index + 1,
+      occurredAt: '2026-08-01T01:00:00.000Z',
+    }))
+
+    render(
+      <TodayPage
+        events={[...completedBibleEvents(cycles), ...todayEvents]}
+        now={new Date('2026-08-01T03:00:00.000Z')}
+        onRead={() => undefined}
+        onOpenTracker={() => undefined}
+      />,
+    )
+
+    expect(screen.getByText(expected)).toBeInTheDocument()
   })
 
   it('지난 무기록 요일은 0장, 미래 요일은 빼기로 표시하고 오늘을 텍스트로 알린다', () => {

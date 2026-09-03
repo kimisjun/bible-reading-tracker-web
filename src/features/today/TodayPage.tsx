@@ -1,6 +1,8 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { type ReactNode } from 'react'
+import { useKoreaClock } from '../../app/useKoreaClock'
 import { bibleBooks } from '../../data/bibleBooks'
 import type { ReadingEvent } from '../../domain/reading'
+import { calculateReadingProgress } from '../../domain/progress'
 import { calculateReadingSummary } from '../../domain/readingSummary'
 import { getBibleAppleChapterUrl } from './bibleApple'
 import { getTodayRecommendation } from './recommendation'
@@ -14,37 +16,12 @@ export type TodayPageProps = Readonly<{
   onOpenTracker(): void
 }>
 
-const DAY_IN_MS = 24 * 60 * 60 * 1_000
-const KOREA_OFFSET_IN_MS = 9 * 60 * 60 * 1_000
-
-function millisecondsUntilNextKoreaDay(now: Date) {
-  const nowTime = now.getTime()
-  const nextKoreaMidnight = (
-    Math.floor((nowTime + KOREA_OFFSET_IN_MS) / DAY_IN_MS) + 1
-  ) * DAY_IN_MS - KOREA_OFFSET_IN_MS
-  return Math.max(1, nextKoreaMidnight - nowTime)
-}
-
-function useKoreaClock(providedNow?: Date) {
-  const [dayTick, setDayTick] = useState(0)
-
-  useEffect(() => {
-    if (providedNow !== undefined) return undefined
-    const currentNow = new Date()
-    const timer = window.setTimeout(
-      () => setDayTick((tick) => tick + 1),
-      millisecondsUntilNextKoreaDay(currentNow),
-    )
-    return () => window.clearTimeout(timer)
-  }, [dayTick, providedNow])
-
-  return providedNow ?? new Date()
-}
-
 export function TodayPage({ events, now, planContent, onRead, onOpenTracker }: TodayPageProps) {
   const currentNow = useKoreaClock(now)
   const recommendation = getTodayRecommendation(events)
   const summary = calculateReadingSummary(events, currentNow)
+  const progress = calculateReadingProgress(events)
+  const completedBibleReadings = progress.completedBibleReadings
   const book = bibleBooks.find((candidate) => candidate.id === recommendation.bookId) ?? bibleBooks[0]
   const chapter = recommendation.chapter
   const bibleAppleUrl = getBibleAppleChapterUrl(book.id, chapter)
@@ -88,7 +65,10 @@ export function TodayPage({ events, now, planContent, onRead, onOpenTracker }: T
       <div className="today-page__summaries">
         <article className="today-page__card today-page__summary-card" aria-labelledby="today-amount-title">
           <h3 id="today-amount-title">오늘 읽은 분량</h3>
-          <p className="today-page__summary-value">오늘 {summary.todayCount}장</p>
+          <p className="today-page__summary-value">
+            {completedBibleReadings > 0 && `${completedBibleReadings}독 후 `}
+            오늘 {summary.todayCount}장
+          </p>
         </article>
         <article className="today-page__card today-page__summary-card" aria-labelledby="weekly-amount-title">
           <h3 id="weekly-amount-title">이번 주 통독</h3>

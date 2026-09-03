@@ -12,6 +12,16 @@ function read(
   return { id, bookId, chapter, delta: 1, occurredAt }
 }
 
+function wholeBibleReads(cycles: number): ReadingEvent[] {
+  return Array.from({ length: cycles }, (_, cycle) =>
+    bibleBooks.flatMap((book) =>
+      Array.from({ length: book.chapters }, (_, index) =>
+        read(`cycle-${cycle + 1}-${book.id}-${index + 1}`, book.id, index + 1),
+      ),
+    ),
+  ).flat()
+}
+
 describe('calculateReadingProgress', () => {
   it('읽은 고유 장을 성경 1,189장 기준 진행률로 계산한다', () => {
     const result = calculateReadingProgress([read('read-1', 'genesis', 1)])
@@ -32,6 +42,35 @@ describe('calculateReadingProgress', () => {
 
     expect(result.overall.completedChapters).toBe(1)
     expect(result.totalReadings).toBe(3)
+  })
+
+  it('모든 장의 활성 읽기 횟수 중 최솟값을 전체 성경 완독 횟수로 계산한다', () => {
+    const result = calculateReadingProgress(wholeBibleReads(2))
+
+    expect(result.completedBibleReadings).toBe(2)
+  })
+
+  it('한 장만 1,189번 반복해도 전체 성경 완독으로 계산하지 않는다', () => {
+    const repeatedChapter = Array.from({ length: 1189 }, (_, index) =>
+      read(`genesis-1-repeat-${index + 1}`, 'genesis', 1),
+    )
+
+    expect(calculateReadingProgress(repeatedChapter).completedBibleReadings).toBe(0)
+  })
+
+  it('완독 후 한 장의 읽기를 취소하면 완독 횟수도 되돌아간다', () => {
+    const completed = wholeBibleReads(1)
+    const genesisOne = completed.find((item) => item.bookId === 'genesis' && item.chapter === 1)
+    if (genesisOne === undefined) throw new Error('창세기 1장 fixture가 필요합니다.')
+    const cancellation: ReadingEvent = {
+      ...genesisOne,
+      id: 'undo-genesis-1',
+      delta: -1,
+      occurredAt: '2026-07-02T09:00:00.000Z',
+      undoneEventId: genesisOne.id,
+    }
+
+    expect(calculateReadingProgress([...completed, cancellation]).completedBibleReadings).toBe(0)
   })
 
   it('읽기와 취소의 합이 0인 장은 완료하지 않은 것으로 계산한다', () => {
